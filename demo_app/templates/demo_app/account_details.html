@@ -1,0 +1,3037 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --tmobile-magenta: #E20074;
+            --tmobile-magenta-light: #fbe4f2;
+            --tmobile-gray: #6c757d;
+        }
+        body { background: #f5f5f7; color: #222; }
+        .tmobile-header { background: #fff; color: var(--tmobile-magenta); padding: 1.5rem 0 1rem 0; border-bottom: 2px solid #eee; }
+        .tmobile-logo { height: 40px; margin-right: 1rem; }
+        .tmobile-title { font-size: 2rem; font-weight: bold; color: var(--tmobile-magenta); margin-bottom: 0; }
+        .add-line-btn { background: var(--tmobile-magenta); color: #fff; font-weight: 600; border-radius: 2rem; border: none; padding: 0.5rem 2rem; }
+        .add-line-btn:hover { background: #b8005a; color: #fff; }
+        .nav-tabs { border-bottom: none; margin-bottom: 0; }
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 0;
+            color: var(--tmobile-gray);
+            background: transparent;
+            font-weight: 500;
+            font-size: 1.1rem;
+            margin-right: 0.5rem;
+            padding: 0.75rem 2rem;
+        }
+        .nav-tabs .nav-link.active {
+            background: var(--tmobile-magenta);
+            color: #fff;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        .tab-content { background: #fff; border-radius: 0 0 1rem 1rem; padding: 2rem 2rem 1.5rem 2rem; margin-bottom: 2rem; border-top: none; }
+        .account-attributes {
+            margin-bottom: 1.5rem;
+        }
+        .account-attributes .row {
+            margin-bottom: 0.5rem;
+        }
+        .account-attr-label {
+            color: var(--tmobile-gray);
+            font-size: 1rem;
+        }
+        .account-attr-value {
+            color: var(--tmobile-magenta);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .account-attr-value.status {
+            color: #111;
+            font-weight: bold;
+        }
+        /* Lines Table */
+        .lines-section {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+        .lines-header-bar {
+            background: var(--tmobile-magenta);
+            color: #fff;
+            border-radius: 1rem 1rem 0 0;
+            padding: 1rem 2rem 0.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .lines-header-bar h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .lines-action-btns .btn {
+            background: #fff;
+            color: var(--tmobile-magenta);
+            border-radius: 2rem;
+            border: none;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            padding: 0.3rem 1.2rem;
+        }
+        .lines-action-btns .btn:last-child { margin-right: 0; }
+        .lines-action-btns .btn:hover {
+            background: #fbe4f2;
+            color: #b8005a;
+        }
+        .lines-action-btns .btn:disabled {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .lines-action-btns .btn:disabled:hover {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        .lines-table thead th {
+            background: var(--tmobile-magenta);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+        }
+        .lines-table tbody tr:nth-child(even) {
+            background: var(--tmobile-magenta-light);
+        }
+        .lines-table tbody tr:nth-child(odd) {
+            background: #fff;
+        }
+        .lines-table td, .lines-table th {
+            vertical-align: middle;
+        }
+        /* Custom Checkbox */
+        .form-check-input:checked {
+            background-color: var(--tmobile-magenta);
+            border-color: var(--tmobile-magenta);
+        }
+        .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(226,0,116,.25);
+        }
+        /* Enhanced Search Input Styling */
+        .search-section {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-input-group {
+            border-radius: 2rem;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input-group:focus-within {
+            box-shadow: 0 4px 16px rgba(226,0,116,0.2);
+            transform: translateY(-1px);
+        }
+        
+        .search-icon {
+            background: #fff;
+            border: none;
+            color: var(--tmobile-magenta);
+            padding: 0.75rem 1rem;
+        }
+        
+        .search-input {
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            background: #fff;
+        }
+        
+        .search-input:focus {
+            box-shadow: none;
+            background: #fff;
+        }
+        
+        .clear-search-btn {
+            border: none;
+            background: #fff;
+            color: #6c757d;
+            padding: 0.75rem 1rem;
+            transition: color 0.2s ease;
+        }
+        
+        .clear-search-btn:hover {
+            color: var(--tmobile-magenta);
+            background: #fff;
+        }
+        
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 0 1rem 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+            transition: background-color 0.2s ease;
+        }
+        
+        .suggestion-item:hover {
+            background-color: var(--tmobile-magenta-light);
+            color: var(--tmobile-magenta);
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .search-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+        
+        .search-results-text {
+            font-size: 0.875rem;
+            color: var(--tmobile-gray);
+            font-weight: 500;
+        }
+        
+        .search-filters {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .filter-btn {
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-color: #dee2e6;
+            color: var(--tmobile-gray);
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn:hover {
+            border-color: var(--tmobile-magenta);
+            color: var(--tmobile-magenta);
+        }
+        
+        .filter-btn.active {
+            background-color: var(--tmobile-magenta);
+            border-color: var(--tmobile-magenta);
+            color: #fff;
+        }
+        
+        /* Chatbot Styles */
+        .chatbot-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--tmobile-magenta);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(226,0,116,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .chatbot-toggle:hover {
+            background: #b8005a;
+            transform: scale(1.1);
+        }
+        
+        .chatbot-container {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 400px;
+            height: 600px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chatbot-header {
+            background: var(--tmobile-magenta);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chatbot-title {
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .chatbot-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            word-wrap: break-word;
+        }
+        
+        .message.user {
+            background: var(--tmobile-magenta-light);
+            color: var(--tmobile-magenta);
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+        }
+        
+        .message.assistant {
+            background: #f8f9fa;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+        }
+        
+        .message.system {
+            background: #e7f3ff;
+            color: #0066cc;
+            align-self: center;
+            text-align: center;
+            font-size: 0.9rem;
+            max-width: 90%;
+        }
+        
+        .typing-indicator {
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            border-radius: 1rem;
+            border-bottom-left-radius: 0.25rem;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #666;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
+        .chatbot-input-area {
+            padding: 1rem;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        
+        .chatbot-input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+        
+        .chatbot-input {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 1.5rem;
+            padding: 0.75rem 1rem;
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+            font-family: inherit;
+        }
+        
+        .chatbot-input:focus {
+            outline: none;
+            border-color: var(--tmobile-magenta);
+            box-shadow: 0 0 0 2px rgba(226,0,116,0.1);
+        }
+        
+        .chatbot-send {
+            background: var(--tmobile-magenta);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .chatbot-send:hover:not(:disabled) {
+            background: #b8005a;
+        }
+        
+        .chatbot-send:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .chatbot-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .suggestion-chip {
+            background: white;
+            border: 1px solid var(--tmobile-magenta);
+            color: var(--tmobile-magenta);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .suggestion-chip:hover {
+            background: var(--tmobile-magenta);
+            color: white;
+        }
+        
+        /* Add a Line Modal Styles */
+        .progress-container {
+            position: relative;
+        }
+        
+        .progress-steps {
+            position: relative;
+        }
+        
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            right: 30px;
+            height: 2px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+        
+        .progress-step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-step.active .step-circle {
+            background: var(--tmobile-magenta);
+            color: white;
+        }
+        
+        .progress-step.completed .step-circle {
+            background: var(--tmobile-magenta);
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .progress-step.active .step-label {
+            color: var(--tmobile-magenta);
+            font-weight: 600;
+        }
+        
+        .progress-step.completed .step-label {
+            color: var(--tmobile-magenta);
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        /* Plan Options Styling */
+        .plan-option {
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .plan-option:hover {
+            border-color: var(--tmobile-magenta);
+            background: var(--tmobile-magenta-light);
+        }
+        
+        .plan-option .form-check-input:checked + .form-check-label {
+            color: var(--tmobile-magenta);
+        }
+        
+        .plan-option .form-check-input:checked ~ .plan-option {
+            border-color: var(--tmobile-magenta);
+            background: var(--tmobile-magenta-light);
+        }
+        
+        .plan-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .plan-price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--tmobile-magenta);
+            margin-bottom: 0.25rem;
+        }
+        
+        .plan-details-link {
+            color: var(--tmobile-magenta);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        
+        .plan-details-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Protection Options Styling */
+        .protection-option {
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .protection-option:hover {
+            border-color: var(--tmobile-magenta);
+            background: var(--tmobile-magenta-light);
+        }
+        
+        .protection-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .protection-price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--tmobile-magenta);
+            margin-bottom: 0.5rem;
+        }
+        
+        .protection-features li {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Trade-in Options Styling */
+        .trade-in-option {
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .trade-in-option:hover {
+            border-color: var(--tmobile-magenta);
+            background: var(--tmobile-magenta-light);
+        }
+        
+        .trade-in-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .trade-in-description {
+            font-size: 0.875rem;
+        }
+        
+        /* Summary Styling */
+        .summary-item {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1rem;
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Device Details Styling */
+        #deviceDetails .card {
+            border: 1px solid var(--tmobile-magenta);
+            background: var(--tmobile-magenta-light);
+        }
+        
+        /* Modal Footer Button States */
+        .modal-footer .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Form Validation Styling */
+        .form-select.is-invalid,
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .invalid-feedback {
+            display: block;
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="tmobile-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a href="/dashboard/" class="d-flex align-items-center text-decoration-none">
+                    <img src="{% static 'logo.svg' %}" alt="T-Mobile Logo" class="tmobile-logo">
+                    <span class="tmobile-title">ABC Limited</span>
+                </a>
+            </div>
+            <button class="add-line-btn" id="addLineBtn">ADD A LINE</button>
+        </div>
+    </div>
+    <div class="container">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mt-4" id="accountTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab">Account Details</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button" role="tab">Billing Statements</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">Reports</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">Account History</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="accountTabsContent">
+            <!-- Account Details Tab -->
+            <div class="tab-pane fade show active" id="details" role="tabpanel">
+                <div class="account-attributes">
+                    <div class="row mb-2">
+                        <div class="col-md-4 mb-2">
+                            <div class="account-attr-label">Account Number</div>
+                            <div class="account-attr-value">{{ account.account_number }}</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="account-attr-label">No. of lines</div>
+                            <div class="account-attr-value">{{ account.number_of_lines }}</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="account-attr-label">Created On</div>
+                            <div class="account-attr-value">{{ account.created_on|date:"d M Y" }}</div>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 mb-2">
+                            <div class="account-attr-label">Last Payment Date</div>
+                            <div class="account-attr-value">{{ account.last_payment_date|date:"d M Y"|default:"N/A" }}</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="account-attr-label">Payment Due Date</div>
+                            <div class="account-attr-value">{{ account.payment_due_date|date:"d M Y"|default:"N/A" }}</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="account-attr-label">Account Type</div>
+                            <div class="account-attr-value">{{ account.get_account_type_display }}</div>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4 mb-2">
+                            <div class="account-attr-label">Last Modified On</div>
+                            <div class="account-attr-value">{{ account.last_modified_on|date:"d M Y" }}</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="account-attr-label">Status</div>
+                            <div class="account-attr-value status">{{ account.get_status_display }}</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Lines Management Section -->
+                <div class="lines-section">
+                    <div class="lines-header-bar">
+                        <h5>Lines Details</h5>
+                        <div class="lines-action-btns">
+                            <button class="btn" id="upgradeBtn" disabled>Upgrade</button>
+                            <button class="btn" id="addServicesBtn" disabled>Add Services</button>
+                            <button class="btn" id="suspendBtn" disabled>Suspend</button>
+                            <button class="btn" id="restoreBtn" disabled>Restore</button>
+                            <button class="btn" id="simSwapBtn" disabled>SIM SWAP</button>
+                            <button class="btn" id="changeMobileNumberBtn" disabled>Change Mobile Number</button>
+                        </div>
+                    </div>
+                    <!-- Search Section -->
+                    <div class="search-section p-3 border-bottom">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="search-container">
+                                    <div class="input-group search-input-group">
+                                        <span class="input-group-text search-icon">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="11" cy="11" r="8"></circle>
+                                                <path d="m21 21-4.35-4.35"></path>
+                                            </svg>
+                                        </span>
+                                        <input type="text" class="form-control search-input" id="linesSearchInput" placeholder="Search lines by name, MSDN, employee name, employee number, date, or status...">
+                                        <button class="btn btn-outline-secondary clear-search-btn" id="clearSearchBtn" type="button" style="display: none;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="search-suggestions" id="searchSuggestions" style="display: none;">
+                                        <div class="suggestion-item" data-search="john">John Smith</div>
+                                        <div class="suggestion-item" data-search="sarah">Sarah Johnson</div>
+                                        <div class="suggestion-item" data-search="michael">Michael Brown</div>
+                                        <div class="suggestion-item" data-search="emily">Emily Davis</div>
+                                        <div class="suggestion-item" data-search="david">David Wilson</div>
+                                        <div class="suggestion-item" data-search="lisa">Lisa Anderson</div>
+                                        <div class="suggestion-item" data-search="jennifer">Jennifer Martinez</div>
+                                        <div class="suggestion-item" data-search="christopher">Christopher Lee</div>
+                                        <div class="suggestion-item" data-search="amanda">Amanda Garcia</div>
+                                        <div class="suggestion-item" data-search="kevin">Kevin Rodriguez</div>
+                                        <div class="suggestion-item" data-search="nicole">Nicole White</div>
+                                        <div class="suggestion-item" data-search="thomas">Thomas Clark</div>
+                                        <div class="suggestion-item" data-search="rachel">Rachel Lewis</div>
+                                        <div class="suggestion-item" data-search="daniel">Daniel Hall</div>
+                                        <div class="suggestion-item" data-search="michelle">Michelle Young</div>
+                                        <div class="suggestion-item" data-search="james">James Allen</div>
+                                        <div class="suggestion-item" data-search="stephanie">Stephanie King</div>
+                                        <div class="suggestion-item" data-search="ryan">Ryan Wright</div>
+                                        <div class="suggestion-item" data-search="lauren">Lauren Scott</div>
+                                        <div class="suggestion-item" data-search="brandon">Brandon Green</div>
+                                        <div class="suggestion-item" data-search="ashley">Ashley Baker</div>
+                                        <div class="suggestion-item" data-search="matthew">Matthew Adams</div>
+                                        <div class="suggestion-item" data-search="jessica">Jessica Nelson</div>
+                                        <div class="suggestion-item" data-search="andrew">Andrew Carter</div>
+                                        <div class="suggestion-item" data-search="melissa">Melissa Mitchell</div>
+                                        <div class="suggestion-item" data-search="robert">Robert Perez</div>
+                                        <div class="suggestion-item" data-search="kimberly">Kimberly Roberts</div>
+                                        <div class="suggestion-item" data-search="steven">Steven Turner</div>
+                                        <div class="suggestion-item" data-search="amanda">Amanda Phillips</div>
+                                        <div class="suggestion-item" data-search="active">Active</div>
+                                        <div class="suggestion-item" data-search="555">+1-555-0123</div>
+                                        <div class="suggestion-item" data-search="emp">EMP001</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="search-stats">
+                                    <span class="search-results-text" id="searchResults">Showing all lines</span>
+                                    <div class="search-filters">
+                                        <button class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="all">All</button>
+                                        <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="active">Active</button>
+                                        <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="suspended">Suspended</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table lines-table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col" style="width:40px"><input class="form-check-input" type="checkbox" /></th>
+                                    <th scope="col">Line Name</th>
+                                    <th scope="col">MSDN</th>
+                                    <th scope="col">Employee Name</th>
+                                    <th scope="col">Employee Number</th>
+                                    <th scope="col">Added on</th>
+                                    <th scope="col">Payment Due</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for line in lines %}
+                                <tr data-line-id="{{ line.id }}">
+                                    <td><input class="form-check-input line-checkbox" type="checkbox" data-line-id="{{ line.id }}" /></td>
+                                    <td>{{ line.line_name }}</td>
+                                    <td>{{ line.msdn }}</td>
+                                    <td>{{ line.employee_name }}</td>
+                                    <td>{{ line.employee_number }}</td>
+                                    <td>{{ line.added_on|date:"d M Y" }}</td>
+                                    <td>{{ line.payment_due_date|date:"d M Y"|default:"N/A" }}</td>
+                                    <td><span class="account-attr-value">{{ line.get_status_display }}</span></td>
+                                    <td>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="editLinePaymentDate({{ line.id }}, '{{ line.line_name }}', '{{ line.employee_name }}', '{{ line.payment_due_date|date:"Y-m-d"|default:"" }}')">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">No lines found for this account.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Other Tabs Placeholder -->
+            <div class="tab-pane fade" id="billing" role="tabpanel">
+                <div class="text-center py-5">Billing Statements content coming soon.</div>
+            </div>
+            <div class="tab-pane fade" id="reports" role="tabpanel">
+                <div class="text-center py-5">Reports content coming soon.</div>
+            </div>
+            <div class="tab-pane fade" id="history" role="tabpanel">
+                <div class="text-center py-5">Account History content coming soon.</div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Edit Payment Date Modal -->
+    <div class="modal fade" id="editPaymentDateModal" tabindex="-1" aria-labelledby="editPaymentDateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background: var(--tmobile-magenta); color: white;">
+                    <h5 class="modal-title" id="editPaymentDateModalLabel">Edit Payment Due Date</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Line:</strong> <span id="editLineName"></span></label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Employee:</strong> <span id="editEmployeeName"></span></label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPaymentDate" class="form-label">Payment Due Date</label>
+                        <input type="date" class="form-control" id="editPaymentDate" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="savePaymentDateBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coming Soon Modal -->
+    <div class="modal fade" id="comingSoonModal" tabindex="-1" aria-labelledby="comingSoonModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="comingSoonModalLabel">Coming Soon</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="comingSoonModalBody">
+            This feature is coming soon.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Service Modal -->
+    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addServiceModalLabel">Add a Service</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addServiceForm">
+              <div class="mb-3">
+                <label for="serviceSelect" class="form-label">Select International Pass:</label>
+                <select class="form-select" id="serviceSelect" required>
+                  <option value="">Choose an option...</option>
+                  <option value="1day">$1: 1 Day (512MB) International Pass</option>
+                  <option value="10day">$35: 10 Day (5GB) International Pass</option>
+                  <option value="30day">$50: 30 Day (15GB) International Pass</option>
+                </select>
+              </div>
+              
+              <!-- Service Details Section -->
+              <div id="serviceDetails" class="mt-4" style="display: none;">
+                <h6 class="text-primary mb-3">Service Details</h6>
+                <div id="serviceDetailsContent"></div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="nextBtn" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header" style="background: var(--tmobile-magenta); color: white;">
+            <h5 class="modal-title" id="checkoutModalLabel">Checkout</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-8">
+                <h6 class="mb-3">Order Summary</h6>
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <h6 class="card-title mb-2" id="checkoutServiceTitle">Selected Service</h6>
+                        <div id="checkoutServiceFeatures" class="text-muted small"></div>
+                      </div>
+                      <div class="text-end">
+                        <span class="h5 text-primary" id="checkoutServicePrice">$0</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mb-4">
+                  <h6 class="mb-3">Payment Method</h6>
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" checked>
+                        <label class="form-check-label" for="creditCard">
+                          <strong>Credit Card ending in 1234</strong>
+                          <div class="text-muted small">Visa •••• 1234</div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title">Billing Summary</h6>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Subtotal:</span>
+                      <span id="checkoutSubtotal">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Taxes & Fees:</span>
+                      <span id="checkoutTaxes">$0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                      <strong>Total:</strong>
+                      <strong class="text-primary" id="checkoutTotal">$0.00</strong>
+                    </div>
+                    <div class="text-muted small">
+                      <p class="mb-2">• Service will be activated immediately upon payment</p>
+                      <p class="mb-0">• You will receive confirmation via SMS and email</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="backToServiceBtn">Back</button>
+            <button type="button" class="btn btn-success" id="completeOrderBtn">Complete Order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add a Line Modal -->
+    <div class="modal fade" id="addLineModal" tabindex="-1" aria-labelledby="addLineModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+          <div class="modal-header" style="background: var(--tmobile-magenta); color: white;">
+            <h5 class="modal-title" id="addLineModalLabel">Add a Line</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Progress Bar -->
+            <div class="progress-container mb-4">
+              <div class="progress-steps d-flex justify-content-between align-items-center">
+                <div class="progress-step active" data-step="1">
+                  <div class="step-circle">1</div>
+                  <div class="step-label">Select Device</div>
+                </div>
+                <div class="progress-step" data-step="2">
+                  <div class="step-circle">2</div>
+                  <div class="step-label">Plan Options</div>
+                </div>
+                <div class="progress-step" data-step="3">
+                  <div class="step-circle">3</div>
+                  <div class="step-label">Device Protection</div>
+                </div>
+                <div class="progress-step" data-step="4">
+                  <div class="step-circle">4</div>
+                  <div class="step-label">Trade-in</div>
+                </div>
+                <div class="progress-step" data-step="5">
+                  <div class="step-circle">5</div>
+                  <div class="step-label">Summary</div>
+                </div>
+                <div class="progress-step" data-step="6">
+                  <div class="step-circle">6</div>
+                  <div class="step-label">Checkout</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step Content -->
+            <div id="stepContent">
+              <!-- Step 1: Select Device -->
+              <div class="step-content active" id="step1">
+                <h6 class="mb-4">Select Device</h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Device Type</label>
+                      <select class="form-select" id="deviceType">
+                        <option value="">Choose device type...</option>
+                        <option value="iphone">iPhone</option>
+                        <option value="samsung">Samsung</option>
+                        <option value="google">Google Pixel</option>
+                        <option value="motorola">Motorola</option>
+                        <option value="lg">LG</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Device Model</label>
+                      <select class="form-select" id="deviceModel" disabled>
+                        <option value="">Select device type first...</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Color</label>
+                      <select class="form-select" id="deviceColor" disabled>
+                        <option value="">Select model first...</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Storage</label>
+                      <select class="form-select" id="deviceStorage" disabled>
+                        <option value="">Select model first...</option>
+                      </select>
+                    </div>
+                  </div>
+                                     <div class="col-md-4">
+                     <div class="form-group mb-3">
+                       <label class="form-label">Quantity</label>
+                       <select class="form-select" id="deviceQuantity">
+                         <option value="1">1</option>
+                         <option value="2">2</option>
+                         <option value="3">3</option>
+                         <option value="4">4</option>
+                         <option value="5">5</option>
+                       </select>
+                     </div>
+                   </div>
+                 </div>
+                 <div class="row">
+                   <div class="col-md-6">
+                     <div class="form-group mb-3">
+                       <label class="form-label">Area Code</label>
+                       <select class="form-select" id="areaCode">
+                         <option value="">Choose area code...</option>
+                         <option value="212">212 - New York, NY</option>
+                         <option value="213">213 - Los Angeles, CA</option>
+                         <option value="312">312 - Chicago, IL</option>
+                         <option value="305">305 - Miami, FL</option>
+                         <option value="404">404 - Atlanta, GA</option>
+                         <option value="415">415 - San Francisco, CA</option>
+                         <option value="512">512 - Austin, TX</option>
+                         <option value="617">617 - Boston, MA</option>
+                         <option value="702">702 - Las Vegas, NV</option>
+                         <option value="713">713 - Houston, TX</option>
+                         <option value="214">214 - Dallas, TX</option>
+                         <option value="215">215 - Philadelphia, PA</option>
+                         <option value="216">216 - Cleveland, OH</option>
+                         <option value="217">217 - Springfield, IL</option>
+                         <option value="218">218 - Duluth, MN</option>
+                         <option value="219">219 - Gary, IN</option>
+                         <option value="220">220 - Columbus, OH</option>
+                         <option value="221">221 - Pittsburgh, PA</option>
+                         <option value="222">222 - Baltimore, MD</option>
+                       </select>
+                     </div>
+                   </div>
+                   <div class="col-md-6">
+                     <div class="form-group mb-3">
+                       <label class="form-label">Employee Name</label>
+                       <input type="text" class="form-control" id="employeeName" placeholder="Enter employee name">
+                     </div>
+                   </div>
+                </div>
+                <div id="deviceDetails" class="mt-3" style="display: none;">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="row align-items-center">
+                        <div class="col-md-3">
+                          <img id="deviceImage" src="" alt="Device" class="img-fluid" style="max-height: 100px;">
+                        </div>
+                        <div class="col-md-9">
+                          <h6 id="deviceTitle">Device Details</h6>
+                          <p id="deviceDescription" class="text-muted mb-2"></p>
+                          <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">MSRP:</span>
+                            <span class="h6 mb-0" id="deviceMSRP">$0</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2: Plan Options -->
+              <div class="step-content" id="step2">
+                <h6 class="mb-4">Plan Options</h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6 class="mb-3">Business Plans</h6>
+                    <div class="plan-options">
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan1" value="business_individual_20">
+                        <label class="form-check-label" for="plan1">
+                          <div class="plan-name">Business Individual Value Unlimited Talk & Text</div>
+                          <div class="plan-price">$20.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan2" value="one_plan_tfb_25">
+                        <label class="form-check-label" for="plan2">
+                          <div class="plan-name">ONE Plan TFB TE</div>
+                          <div class="plan-price">$25.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan3" value="one_plan_voice_tablet_35">
+                        <label class="form-check-label" for="plan3">
+                          <div class="plan-name">One Plan Voice and Tablet For Enterprise</div>
+                          <div class="plan-price">$35.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan4" value="one_plan_voice_tablet_45">
+                        <label class="form-check-label" for="plan4">
+                          <div class="plan-name">One Plan Voice and Tablet For Enterprise</div>
+                          <div class="plan-price">$45.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan5" value="one_plan_voice_tablet_55">
+                        <label class="form-check-label" for="plan5">
+                          <div class="plan-name">One Plan Voice and Tablet For Enterprise</div>
+                          <div class="plan-price">$55.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <h6 class="mb-3">Premium Plans</h6>
+                    <div class="plan-options">
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan6" value="business_individual_60">
+                        <label class="form-check-label" for="plan6">
+                          <div class="plan-name">Business Individual Value Unlimited Talk & Text</div>
+                          <div class="plan-price">$60.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan7" value="one_plan_tfb_65">
+                        <label class="form-check-label" for="plan7">
+                          <div class="plan-name">ONE Plan TFB TE</div>
+                          <div class="plan-price">$65.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan8" value="one_plan_voice_tablet_75">
+                        <label class="form-check-label" for="plan8">
+                          <div class="plan-name">One Plan Voice and Tablet For Enterprise</div>
+                          <div class="plan-price">$75.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan9" value="one_plan_voice_tablet_85">
+                        <label class="form-check-label" for="plan9">
+                          <div class="plan-name">One Plan Voice and Tablet For Enterprise</div>
+                          <div class="plan-price">$85.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="planOption" id="plan10" value="one_plan_voice_tablet_95">
+                        <label class="form-check-label" for="plan10">
+                          <div class="plan-name">One Plan Voice and Tablet For Enterprise</div>
+                          <div class="plan-price">$95.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <a href="#" class="text-primary">See our broadband facts ></a>
+                </div>
+              </div>
+
+              <!-- Step 3: Device Protection -->
+              <div class="step-content" id="step3">
+                <h6 class="mb-4">Device Protection</h6>
+                <div class="protection-options">
+                  <div class="form-check protection-option mb-4">
+                    <input class="form-check-input" type="radio" name="protectionOption" id="noProtection" value="none" checked>
+                    <label class="form-check-label" for="noProtection">
+                      <div class="protection-name">I do not want device protection for any of these lines</div>
+                      <div class="protection-price">$0.00/mo.</div>
+                    </label>
+                  </div>
+                  <div class="form-check protection-option mb-4">
+                    <input class="form-check-input" type="radio" name="protectionOption" id="protection360" value="protection_360">
+                    <label class="form-check-label" for="protection360">
+                      <div class="protection-name">Protection 360 Tier S TE</div>
+                      <div class="protection-price">$18.00/mo.</div>
+                      <div class="protection-features">
+                        <ul class="list-unstyled mt-2">
+                          <li>✓ Screen damage protection</li>
+                          <li>✓ Accidental damage coverage</li>
+                          <li>✓ Theft and loss protection</li>
+                          <li>✓ 24/7 tech support</li>
+                        </ul>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 4: Trade-in -->
+              <div class="step-content" id="step4">
+                <h6 class="mb-4">Trade-in</h6>
+                <div class="trade-in-options">
+                  <div class="form-check trade-in-option mb-4">
+                    <input class="form-check-input" type="radio" name="tradeInOption" id="noTradeIn" value="no" checked>
+                    <label class="form-check-label" for="noTradeIn">
+                      <div class="trade-in-name">No, I don't want to trade in a device</div>
+                    </label>
+                  </div>
+                  <div class="form-check trade-in-option mb-4">
+                    <input class="form-check-input" type="radio" name="tradeInOption" id="yesTradeIn" value="yes">
+                    <label class="form-check-label" for="yesTradeIn">
+                      <div class="trade-in-name">Yes, I want to trade in a device</div>
+                      <div class="trade-in-description text-muted">Get credit toward your new device</div>
+                    </label>
+                  </div>
+                </div>
+                <div id="tradeInDetails" class="mt-3" style="display: none;">
+                  <div class="card">
+                    <div class="card-body">
+                      <h6 class="card-title">Trade-in Device Details</h6>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group mb-3">
+                            <label class="form-label">Device Brand</label>
+                            <select class="form-select" id="tradeInBrand">
+                              <option value="">Select brand...</option>
+                              <option value="apple">Apple</option>
+                              <option value="samsung">Samsung</option>
+                              <option value="google">Google</option>
+                              <option value="motorola">Motorola</option>
+                              <option value="lg">LG</option>
+                              <option value="other">Other</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group mb-3">
+                            <label class="form-label">Device Model</label>
+                            <input type="text" class="form-control" id="tradeInModel" placeholder="Enter device model">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group mb-3">
+                            <label class="form-label">Device Condition</label>
+                            <select class="form-select" id="tradeInCondition">
+                              <option value="">Select condition...</option>
+                              <option value="excellent">Excellent - Like new</option>
+                              <option value="good">Good - Minor wear</option>
+                              <option value="fair">Fair - Some damage</option>
+                              <option value="poor">Poor - Significant damage</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group mb-3">
+                            <label class="form-label">Estimated Value</label>
+                            <div class="input-group">
+                              <span class="input-group-text">$</span>
+                              <input type="text" class="form-control" id="tradeInValue" placeholder="0.00" readonly>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 5: Summary -->
+              <div class="step-content" id="step5">
+                <h6 class="mb-4">Summary</h6>
+                <div class="summary-container">
+                  <div class="row">
+                    <div class="col-md-8">
+                      <div class="summary-item mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 class="mb-1" id="summaryDeviceTitle">Device</h6>
+                            <div class="text-muted small" id="summaryDeviceDetails">No device selected</div>
+                          </div>
+                          <div class="text-end">
+                            <div class="h6 mb-0" id="summaryDevicePrice">$0.00</div>
+                            <div class="text-muted small" id="summaryDeviceMSRP">MSRP: $0.00</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="summary-item mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 class="mb-1" id="summaryPlanTitle">Plan</h6>
+                            <div class="text-muted small" id="summaryPlanDetails">No plan selected</div>
+                          </div>
+                          <div class="text-end">
+                            <div class="h6 mb-0" id="summaryPlanPrice">$0.00/mo.</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="summary-item mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 class="mb-1" id="summaryProtectionTitle">Device Protection</h6>
+                            <div class="text-muted small" id="summaryProtectionDetails">No protection selected</div>
+                          </div>
+                          <div class="text-end">
+                            <div class="h6 mb-0" id="summaryProtectionPrice">$0.00/mo.</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="summary-item mb-3" id="summaryTradeInItem" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 class="mb-1" id="summaryTradeInTitle">Trade-in Credit</h6>
+                            <div class="text-muted small" id="summaryTradeInDetails">No trade-in selected</div>
+                          </div>
+                          <div class="text-end">
+                            <div class="h6 mb-0 text-success" id="summaryTradeInValue">-$0.00</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card bg-light">
+                        <div class="card-body">
+                          <h6 class="card-title">Pricing Summary</h6>
+                          <hr>
+                          <div class="d-flex justify-content-between mb-2">
+                            <span>Device (24 mo.):</span>
+                            <span id="summaryDeviceMonthly">$0.00/mo.</span>
+                          </div>
+                          <div class="d-flex justify-content-between mb-2">
+                            <span>Plan:</span>
+                            <span id="summaryPlanMonthly">$0.00/mo.</span>
+                          </div>
+                          <div class="d-flex justify-content-between mb-2">
+                            <span>Protection:</span>
+                            <span id="summaryProtectionMonthly">$0.00/mo.</span>
+                          </div>
+                          <hr>
+                          <div class="d-flex justify-content-between mb-2">
+                            <strong>Total Monthly:</strong>
+                            <strong class="text-primary" id="summaryTotalMonthly">$0.00/mo.</strong>
+                          </div>
+                          <div class="d-flex justify-content-between mb-2">
+                            <span>Due Now:</span>
+                            <span id="summaryDueNow">$0.00</span>
+                          </div>
+                          <div class="text-muted small mt-3">
+                            <p class="mb-1">• 24-month device payment plan</p>
+                            <p class="mb-1">• 0% APR for well-qualified buyers</p>
+                            <p class="mb-0">• Service required</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 6: Checkout -->
+              <div class="step-content" id="step6">
+                <h6 class="mb-4">Checkout</h6>
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="card mb-4">
+                      <div class="card-body">
+                        <h6 class="card-title mb-3">Order Summary</h6>
+                        <div id="checkoutOrderSummary">
+                          <!-- Order summary will be populated here -->
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card">
+                      <div class="card-body">
+                        <h6 class="card-title mb-3">Payment Method</h6>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="paymentMethod" id="creditCardCheckout" checked>
+                          <label class="form-check-label" for="creditCardCheckout">
+                            <strong>Credit Card ending in 1234</strong>
+                            <div class="text-muted small">Visa •••• 1234</div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card bg-light">
+                      <div class="card-body">
+                        <h6 class="card-title">Billing Summary</h6>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                          <span>Subtotal:</span>
+                          <span id="checkoutSubtotalFinal">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                          <span>Taxes & Fees:</span>
+                          <span id="checkoutTaxesFinal">$0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                          <strong>Total:</strong>
+                          <strong class="text-primary" id="checkoutTotalFinal">$0.00</strong>
+                        </div>
+                        <div class="text-muted small">
+                          <p class="mb-2">• Device will be shipped within 2-3 business days</p>
+                          <p class="mb-2">• Service will be activated upon device activation</p>
+                          <p class="mb-0">• You will receive confirmation via SMS and email</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="prevStepBtn" style="display: none;">Back</button>
+            <button type="button" class="btn btn-primary" id="nextStepBtn">Next</button>
+                                    <button type="button" class="btn btn-success" id="completeAddLineOrderBtn" style="display: none;">Complete Order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chatbot UI -->
+    <button class="chatbot-toggle" id="chatbotToggle">
+        💬
+    </button>
+
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <h6 class="chatbot-title">T-Mobile Assistant</h6>
+            <button class="chatbot-close" id="chatbotClose">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="message system">
+                Welcome! I can help you manage your lines and services. Try commands like:
+            </div>
+            <div class="chatbot-suggestions">
+                <span class="suggestion-chip" data-suggestion="Add international pass to John Smith's line">Add service to John's line</span>
+                <span class="suggestion-chip" data-suggestion="Show me all active lines">Show active lines</span>
+                <span class="suggestion-chip" data-suggestion="Add 10 day pass to all lines">Add service to all lines</span>
+                <span class="suggestion-chip" data-suggestion="Suspend John Smith's line">Suspend a line</span>
+                <span class="suggestion-chip" data-suggestion="Restore all suspended lines">Restore lines</span>
+            </div>
+        </div>
+        <div class="chatbot-input-area">
+            <div class="chatbot-input-group">
+                <textarea class="chatbot-input" id="chatbotInput" placeholder="Type your message..." rows="1"></textarea>
+                <button class="chatbot-send" id="chatbotSend">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // Helper to show modal with custom title and message
+      function showComingSoonModal(title, message) {
+        document.getElementById('comingSoonModalLabel').textContent = title;
+        document.getElementById('comingSoonModalBody').textContent = message;
+        var modal = new bootstrap.Modal(document.getElementById('comingSoonModal'));
+        modal.show();
+      }
+
+      // Add a Line Modal Functionality
+      let currentStep = 1;
+      let orderData = {
+        device: {},
+        plan: {},
+        protection: {},
+        tradeIn: {},
+        summary: {}
+      };
+
+      // Device data
+      const deviceData = {
+        iphone: {
+          'iPhone 16 Pro': {
+            colors: ['Black Titanium', 'White Titanium', 'Natural Titanium', 'Blue Titanium'],
+            storage: ['128GB', '256GB', '512GB', '1TB'],
+            msrp: 999.99,
+            image: 'https://via.placeholder.com/100x100?text=iPhone+16+Pro'
+          },
+          'iPhone 16': {
+            colors: ['Black', 'White', 'Blue', 'Green', 'Pink'],
+            storage: ['128GB', '256GB', '512GB'],
+            msrp: 799.99,
+            image: 'https://via.placeholder.com/100x100?text=iPhone+16'
+          }
+        },
+        samsung: {
+          'Galaxy S24 Ultra': {
+            colors: ['Titanium Black', 'Titanium Gray', 'Titanium Violet', 'Titanium Yellow'],
+            storage: ['256GB', '512GB', '1TB'],
+            msrp: 1299.99,
+            image: 'https://via.placeholder.com/100x100?text=Galaxy+S24+Ultra'
+          },
+          'Galaxy S24+': {
+            colors: ['Onyx Black', 'Marble Gray', 'Cobalt Violet', 'Amber Yellow'],
+            storage: ['256GB', '512GB'],
+            msrp: 999.99,
+            image: 'https://via.placeholder.com/100x100?text=Galaxy+S24+'
+          }
+        }
+      };
+
+      // Plan data
+      const planData = {
+        'business_individual_20': { name: 'Business Individual Value Unlimited Talk & Text', price: 20.00 },
+        'one_plan_tfb_25': { name: 'ONE Plan TFB TE', price: 25.00 },
+        'one_plan_voice_tablet_35': { name: 'One Plan Voice and Tablet For Enterprise', price: 35.00 },
+        'one_plan_voice_tablet_45': { name: 'One Plan Voice and Tablet For Enterprise', price: 45.00 },
+        'one_plan_voice_tablet_55': { name: 'One Plan Voice and Tablet For Enterprise', price: 55.00 },
+        'business_individual_60': { name: 'Business Individual Value Unlimited Talk & Text', price: 60.00 },
+        'one_plan_tfb_65': { name: 'ONE Plan TFB TE', price: 65.00 },
+        'one_plan_voice_tablet_75': { name: 'One Plan Voice and Tablet For Enterprise', price: 75.00 },
+        'one_plan_voice_tablet_85': { name: 'One Plan Voice and Tablet For Enterprise', price: 85.00 },
+        'one_plan_voice_tablet_95': { name: 'One Plan Voice and Tablet For Enterprise', price: 95.00 }
+      };
+
+      // Protection data
+      const protectionData = {
+        'none': { name: 'No Protection', price: 0.00 },
+        'protection_360': { name: 'Protection 360 Tier S TE', price: 18.00 }
+      };
+
+      document.getElementById('addLineBtn').addEventListener('click', function() {
+        openAddLineModal();
+      });
+      
+      // Function to open Add Line modal (can be called from button or URL parameter)
+      function openAddLineModal() {
+        // Reset modal state
+        currentStep = 1;
+        orderData = {
+          device: {},
+          plan: {},
+          protection: {},
+          tradeIn: {},
+          summary: {}
+        };
+        
+        // Reset form fields
+        resetModalForm();
+        
+        // Show modal
+        var modal = new bootstrap.Modal(document.getElementById('addLineModal'));
+        modal.show();
+        
+        // Update progress and buttons
+        updateProgress();
+        updateModalButtons();
+      }
+      
+      // Check for URL parameters and handle accordingly
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('add_line') === 'true') {
+        // Wait for page to fully load before opening modal
+        setTimeout(() => {
+          openAddLineModal();
+          // Remove the parameter from URL without reloading
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+        }, 500);
+      } else if (urlParams.get('line_added') === 'true') {
+        // Show success message for newly added line
+        setTimeout(() => {
+          showComingSoonModal(
+            'Welcome Back!', 
+            'Your new line has been successfully added to this account. You can see it in the lines table below.'
+          );
+          // Remove the parameter from URL without reloading
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+        }, 1000);
+      }
+      document.getElementById('upgradeBtn').addEventListener('click', function() {
+        showComingSoonModal('Upgrade', 'This feature is coming soon.');
+      });
+      const addServicesBtn = document.getElementById('addServicesBtn');
+      if (addServicesBtn) {
+        addServicesBtn.addEventListener('click', function() {
+          console.log('Add Services button clicked');
+          const modalElement = document.getElementById('addServiceModal');
+          if (modalElement) {
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+          } else {
+            console.error('Modal element not found');
+          }
+        });
+      } else {
+        console.error('Add Services button not found');
+      }
+      document.getElementById('suspendBtn').addEventListener('click', function() {
+        const selectedLines = getSelectedLines();
+        if (selectedLines.length === 0) {
+          alert('Please select at least one line to suspend.');
+          return;
+        }
+        
+        const lineIds = selectedLines.map(line => line.id);
+        const lineNames = selectedLines.map(line => line.name).join(', ');
+        
+        if (confirm(`Are you sure you want to suspend the following line(s)?\n\n${lineNames}\n\nThis will temporarily disable service for these lines.`)) {
+          suspendLines(lineIds);
+        }
+      });
+      
+      document.getElementById('restoreBtn').addEventListener('click', function() {
+        const selectedLines = getSelectedLines();
+        if (selectedLines.length === 0) {
+          alert('Please select at least one line to restore.');
+          return;
+        }
+        
+        const lineIds = selectedLines.map(line => line.id);
+        const lineNames = selectedLines.map(line => line.name).join(', ');
+        
+        if (confirm(`Are you sure you want to restore the following line(s)?\n\n${lineNames}\n\nThis will re-enable service for these lines.`)) {
+          restoreLines(lineIds);
+        }
+      });
+      document.getElementById('simSwapBtn').addEventListener('click', function() {
+        showComingSoonModal('SIM SWAP', 'This feature is coming soon.');
+      });
+
+      // Global variables for services and selected lines
+      let availableServices = [];
+      let selectedLines = [];
+      
+      // Load services on page load
+      loadAvailableServices();
+      
+      async function loadAvailableServices() {
+        try {
+          const response = await fetch('/api/services/');
+          const data = await response.json();
+          availableServices = data.services;
+          populateServiceSelect();
+        } catch (error) {
+          console.error('Error loading services:', error);
+        }
+      }
+      
+      function populateServiceSelect() {
+        const serviceSelect = document.getElementById('serviceSelect');
+        serviceSelect.innerHTML = '<option value="">Choose an option...</option>';
+        
+        availableServices.forEach(service => {
+          const option = document.createElement('option');
+          option.value = service.id;
+          option.textContent = `$${service.price}: ${service.name}`;
+          serviceSelect.appendChild(option);
+        });
+      }
+
+      // Add Service Modal functionality
+      document.getElementById('serviceSelect').addEventListener('change', function() {
+        const nextBtn = document.getElementById('nextBtn');
+        const serviceDetails = document.getElementById('serviceDetails');
+        const serviceDetailsContent = document.getElementById('serviceDetailsContent');
+        
+        nextBtn.disabled = !this.value;
+        
+        if (this.value) {
+          serviceDetails.style.display = 'block';
+          
+          const selectedService = availableServices.find(service => service.id == this.value);
+          if (selectedService) {
+            let detailsHtml = `<h6 class="text-primary mb-2">${selectedService.name}</h6>`;
+            detailsHtml += `<p class="text-muted mb-3">${selectedService.description}</p>`;
+          detailsHtml += '<ul class="list-unstyled">';
+            detailsHtml += `<li class="mb-2"><i class="text-success me-2">✓</i>Duration: ${selectedService.duration_days} days</li>`;
+            if (selectedService.data_allowance_mb) {
+              detailsHtml += `<li class="mb-2"><i class="text-success me-2">✓</i>Data Allowance: ${selectedService.data_allowance_mb}MB</li>`;
+            }
+            selectedService.features.forEach(feature => {
+              detailsHtml += `<li class="mb-2"><i class="text-success me-2">✓</i>${feature}</li>`;
+          });
+          detailsHtml += '</ul>';
+          
+          serviceDetailsContent.innerHTML = detailsHtml;
+          }
+        } else {
+          serviceDetails.style.display = 'none';
+        }
+      });
+
+      document.getElementById('nextBtn').addEventListener('click', function() {
+        const selectedServiceId = document.getElementById('serviceSelect').value;
+        if (selectedServiceId) {
+          // Get selected lines before proceeding
+          selectedLines = getSelectedLines();
+          
+          if (selectedLines.length === 0) {
+            alert('Please select at least one line to add the service to.');
+            return;
+          }
+          
+          // Populate checkout modal with selected service
+          populateCheckoutModal(selectedServiceId);
+          
+          // Close add service modal and open checkout modal
+          var addServiceModal = bootstrap.Modal.getInstance(document.getElementById('addServiceModal'));
+          addServiceModal.hide();
+          
+          setTimeout(() => {
+            var checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+            checkoutModal.show();
+          }, 300);
+        }
+      });
+
+      function getSelectedLines() {
+        const checkboxes = document.querySelectorAll('.line-checkbox:checked');
+        return Array.from(checkboxes).map(checkbox => ({
+          id: parseInt(checkbox.dataset.lineId),
+          name: checkbox.closest('tr').querySelector('td:nth-child(2)').textContent,
+          msdn: checkbox.closest('tr').querySelector('td:nth-child(3)').textContent
+        }));
+      }
+
+      function populateCheckoutModal(serviceId) {
+        const selectedService = availableServices.find(service => service.id == serviceId);
+        if (!selectedService) return;
+
+        const taxes = Math.round(selectedService.price * 0.08 * 100) / 100; // 8% tax
+        const total = selectedService.price + taxes;
+
+        // Create features summary
+        let features = `${selectedService.duration_days} days`;
+        if (selectedService.data_allowance_mb) {
+          features += ` • ${selectedService.data_allowance_mb}MB data`;
+        }
+        features += ` • ${selectedService.service_type.replace('_', ' ')}`;
+
+        document.getElementById('checkoutServiceTitle').textContent = selectedService.name;
+        document.getElementById('checkoutServiceFeatures').textContent = features;
+        document.getElementById('checkoutServicePrice').textContent = `$${selectedService.price}`;
+        document.getElementById('checkoutSubtotal').textContent = `$${selectedService.price.toFixed(2)}`;
+        document.getElementById('checkoutTaxes').textContent = `$${taxes.toFixed(2)}`;
+        document.getElementById('checkoutTotal').textContent = `$${total.toFixed(2)}`;
+        
+        // Store selected service ID for order completion
+        document.getElementById('checkoutModal').dataset.serviceId = serviceId;
+      }
+
+      // Back button in checkout modal
+      document.getElementById('backToServiceBtn').addEventListener('click', function() {
+        var checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+        checkoutModal.hide();
+        
+        setTimeout(() => {
+          var addServiceModal = new bootstrap.Modal(document.getElementById('addServiceModal'));
+          addServiceModal.show();
+        }, 300);
+      });
+
+      // Complete order button
+      document.getElementById('completeOrderBtn').addEventListener('click', async function() {
+        const serviceId = document.getElementById('checkoutModal').dataset.serviceId;
+        const lineIds = selectedLines.map(line => line.id);
+        
+        if (!serviceId || lineIds.length === 0) {
+          alert('Error: Missing service or line selection');
+          return;
+        }
+        
+        // Disable button and show loading state
+        const completeBtn = this;
+        completeBtn.disabled = true;
+        completeBtn.textContent = 'Processing...';
+        
+        try {
+          const response = await fetch('/api/services/add/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              service_id: parseInt(serviceId),
+              line_ids: lineIds,
+              payment_method: 'Credit Card'
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            // Success
+            const serviceName = data.service_details.name;
+            const totalAmount = `$${data.service_details.total_amount.toFixed(2)}`;
+            const linesCount = data.services_added.length;
+        
+        showComingSoonModal(
+              'Service Successfully Added!', 
+              `${serviceName} has been successfully added to ${linesCount} line(s) for ${totalAmount}. The service is now active and you will receive confirmation via SMS and email.`
+        );
+            
+        var checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+        checkoutModal.hide();
+        
+        // Reset search and filters after successful order
+        setTimeout(() => {
+          resetSearchAndFilters();
+              // Optionally refresh the page to show updated data
+              // window.location.reload();
+        }, 500);
+            
+          } else {
+            // Error from API
+            alert(`Error: ${data.error || 'Failed to add service'}`);
+          }
+          
+        } catch (error) {
+          console.error('Error adding service:', error);
+          alert('Error: Failed to process order. Please try again.');
+        }
+        
+        // Re-enable button
+        completeBtn.disabled = false;
+        completeBtn.textContent = 'Complete Order';
+      });
+
+      // Enhanced search functionality
+      const searchInput = document.getElementById('linesSearchInput');
+      const clearSearchBtn = document.getElementById('clearSearchBtn');
+      const searchSuggestions = document.getElementById('searchSuggestions');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      let currentFilter = 'all';
+      
+      // Search input functionality
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        // Show/hide clear button
+        clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
+        
+        // Show/hide suggestions
+        if (searchTerm.length > 0) {
+          showSuggestions(searchTerm);
+        } else {
+          searchSuggestions.style.display = 'none';
+        }
+        
+        // Filter table
+        filterTable(searchTerm, currentFilter);
+      });
+      
+      // Clear search button
+      clearSearchBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        searchInput.focus();
+        clearSearchBtn.style.display = 'none';
+        searchSuggestions.style.display = 'none';
+        filterTable('', currentFilter);
+      });
+      
+      // Search suggestions
+      searchInput.addEventListener('focus', function() {
+        if (this.value.length > 0) {
+          showSuggestions(this.value);
+        }
+      });
+      
+      // Hide suggestions when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.search-container')) {
+          searchSuggestions.style.display = 'none';
+        }
+      });
+      
+      // Filter buttons
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Update active state
+          filterBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Update current filter
+          currentFilter = this.dataset.filter;
+          
+          // Re-filter table
+          filterTable(searchInput.value.toLowerCase().trim(), currentFilter);
+        });
+      });
+      
+      // Suggestion click handler
+      searchSuggestions.addEventListener('click', function(e) {
+        if (e.target.classList.contains('suggestion-item')) {
+          const searchValue = e.target.dataset.search;
+          searchInput.value = e.target.textContent;
+          searchInput.focus();
+          searchSuggestions.style.display = 'none';
+          filterTable(searchValue, currentFilter);
+        }
+      });
+      
+      function showSuggestions(searchTerm) {
+        const suggestions = searchSuggestions.querySelectorAll('.suggestion-item');
+        let hasVisibleSuggestions = false;
+        
+        suggestions.forEach(suggestion => {
+          const text = suggestion.textContent.toLowerCase();
+          if (text.includes(searchTerm)) {
+            suggestion.style.display = 'block';
+            hasVisibleSuggestions = true;
+          } else {
+            suggestion.style.display = 'none';
+          }
+        });
+        
+        searchSuggestions.style.display = hasVisibleSuggestions ? 'block' : 'none';
+      }
+      
+      function filterTable(searchTerm, filter) {
+        const tableBody = document.querySelector('.lines-table tbody');
+        const rows = tableBody.querySelectorAll('tr');
+        const searchResults = document.getElementById('searchResults');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+          const cells = row.querySelectorAll('td');
+          const status = cells[7]?.textContent.toLowerCase() || '';
+          
+          // Check if row matches filter
+          let matchesFilter = true;
+          if (filter === 'active' && status !== 'active') {
+            matchesFilter = false;
+          } else if (filter === 'suspended' && status !== 'suspended') {
+            matchesFilter = false;
+          }
+          
+          // Check if row matches search term
+          const searchableText = [
+            cells[1]?.textContent || '', // Line Name
+            cells[2]?.textContent || '', // MSDN
+            cells[3]?.textContent || '', // Employee Name
+            cells[4]?.textContent || '', // Employee Number
+            cells[5]?.textContent || '', // Added on
+            cells[6]?.textContent || '', // Payment Due
+            cells[7]?.textContent || ''  // Status
+          ].join(' ').toLowerCase();
+          
+          const matchesSearch = !searchTerm || searchableText.includes(searchTerm);
+          
+          if (matchesFilter && matchesSearch) {
+            row.style.display = '';
+            visibleCount++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Update search results text
+        updateSearchResultsText(visibleCount, searchTerm, filter);
+      }
+      
+      function updateSearchResultsText(visibleCount, searchTerm, filter) {
+        const searchResults = document.getElementById('searchResults');
+        let text = '';
+        
+        if (searchTerm && filter !== 'all') {
+          text = `${visibleCount} lines found (filtered by "${filter}")`;
+        } else if (searchTerm) {
+          text = visibleCount === 1 ? '1 line found' : `${visibleCount} lines found`;
+        } else if (filter !== 'all') {
+          text = `${visibleCount} ${filter} lines`;
+        } else {
+          text = 'Showing all lines';
+        }
+        
+        if (visibleCount === 0) {
+          text = 'No lines found';
+        }
+        
+        searchResults.textContent = text;
+      }
+
+      // Checkbox and button management
+      const actionButtons = document.querySelectorAll('.lines-action-btns .btn');
+      const tableCheckboxes = document.querySelectorAll('.line-checkbox');
+      const headerCheckbox = document.querySelector('.lines-table thead .form-check-input');
+      
+      // Function to update button states
+      function updateButtonStates() {
+        const checkedBoxes = document.querySelectorAll('.line-checkbox:checked');
+        const hasCheckedBoxes = checkedBoxes.length > 0;
+        
+        actionButtons.forEach(button => {
+          button.disabled = !hasCheckedBoxes;
+        });
+        
+        // Update button text to show selection count
+        if (hasCheckedBoxes) {
+          const count = checkedBoxes.length;
+          const countText = count === 1 ? '1 line selected' : `${count} lines selected`;
+          
+          // Update button text to show selection
+          actionButtons.forEach(button => {
+            const originalText = button.getAttribute('data-original-text') || button.textContent;
+            if (!button.getAttribute('data-original-text')) {
+              button.setAttribute('data-original-text', originalText);
+            }
+            button.textContent = `${originalText} (${count})`;
+          });
+        } else {
+          // Restore original button text
+          actionButtons.forEach(button => {
+            const originalText = button.getAttribute('data-original-text');
+            if (originalText) {
+              button.textContent = originalText;
+            }
+          });
+        }
+      }
+      
+      // Function to reset search and filters
+      function resetSearchAndFilters() {
+        // Clear search input
+        const searchInput = document.getElementById('linesSearchInput');
+        if (searchInput) {
+          searchInput.value = '';
+        }
+        
+        // Clear search button
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        if (clearSearchBtn) {
+          clearSearchBtn.style.display = 'none';
+        }
+        
+        // Hide search suggestions
+        const searchSuggestions = document.getElementById('searchSuggestions');
+        if (searchSuggestions) {
+          searchSuggestions.style.display = 'none';
+        }
+        
+        // Reset filter buttons to "All"
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.dataset.filter === 'all') {
+            btn.classList.add('active');
+          }
+        });
+        
+        // Reset current filter
+        currentFilter = 'all';
+        
+        // Show all lines
+        filterTable('', 'all');
+        
+        // Uncheck all checkboxes
+        const allCheckboxes = document.querySelectorAll('.lines-table .form-check-input');
+        allCheckboxes.forEach(checkbox => {
+          checkbox.checked = false;
+        });
+        
+        // Update button states
+        updateButtonStates();
+        
+        console.log('Search and filters reset after order completion');
+      }
+      
+      // Function to suspend lines
+      async function suspendLines(lineIds) {
+        try {
+          const response = await fetch('/api/lines/suspend/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              line_ids: lineIds
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            // Success - show confirmation
+            showComingSoonModal(
+              'Lines Suspended Successfully!', 
+              `${data.message}\n\nSuspended lines:\n${data.suspended_lines.map(line => `• ${line.line_name} (${line.msdn})`).join('\n')}`
+            );
+            
+            // Refresh the page to show updated status
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            // Error from API
+            alert(`Error: ${data.error || 'Failed to suspend lines'}`);
+          }
+          
+        } catch (error) {
+          console.error('Error suspending lines:', error);
+          alert('Error: Failed to suspend lines. Please try again.');
+        }
+      }
+      
+      // Function to restore lines
+      async function restoreLines(lineIds) {
+        try {
+          const response = await fetch('/api/lines/restore/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              line_ids: lineIds
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            // Success - show confirmation
+            showComingSoonModal(
+              'Lines Restored Successfully!', 
+              `${data.message}\n\nRestored lines:\n${data.restored_lines.map(line => `• ${line.line_name} (${line.msdn})`).join('\n')}`
+            );
+            
+            // Refresh the page to show updated status
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            // Error from API
+            alert(`Error: ${data.error || 'Failed to restore lines'}`);
+          }
+          
+        } catch (error) {
+          console.error('Error restoring lines:', error);
+          alert('Error: Failed to restore lines. Please try again.');
+        }
+      }
+      
+      // Handle individual row checkboxes
+      tableCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          updateButtonStates();
+        });
+      });
+      
+      // Handle header checkbox (select all)
+      if (headerCheckbox) {
+        headerCheckbox.addEventListener('change', function() {
+          const isChecked = this.checked;
+          const visibleCheckboxes = document.querySelectorAll('.line-checkbox');
+          visibleCheckboxes.forEach(checkbox => {
+            // Only check boxes for visible rows
+            if (checkbox.closest('tr').style.display !== 'none') {
+            checkbox.checked = isChecked;
+            }
+          });
+          updateButtonStates();
+        });
+      }
+    </script>
+
+    <!-- Chatbot UI -->
+    <script>
+        // Chatbot functionality
+        const chatbotToggle = document.getElementById('chatbotToggle');
+        const chatbotContainer = document.getElementById('chatbotContainer');
+        const chatbotClose = document.getElementById('chatbotClose');
+        const chatbotInput = document.getElementById('chatbotInput');
+        const chatbotSend = document.getElementById('chatbotSend');
+        const chatbotMessages = document.getElementById('chatbotMessages');
+        
+        let chatbotOpen = false;
+        let currentAccountId = parseInt('{{ account.id }}');
+        let conversationHistory = [];
+        let currentEditingLineId = null;
+
+        // Toggle chatbot
+        chatbotToggle.addEventListener('click', function() {
+            chatbotOpen = !chatbotOpen;
+            chatbotContainer.style.display = chatbotOpen ? 'flex' : 'none';
+            if (chatbotOpen) {
+                chatbotInput.focus();
+                // Keep chat open - don't close after each message
+            }
+        });
+
+        chatbotClose.addEventListener('click', function() {
+            chatbotOpen = false;
+            chatbotContainer.style.display = 'none';
+        });
+
+        // Auto-resize textarea
+        chatbotInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Send message on Enter
+        chatbotInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        chatbotSend.addEventListener('click', sendMessage);
+
+        // Handle suggestion clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('suggestion-chip')) {
+                const suggestion = e.target.dataset.suggestion;
+                chatbotInput.value = suggestion;
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const message = chatbotInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            chatbotInput.value = '';
+            chatbotInput.style.height = 'auto';
+
+            // Store message in conversation history
+            conversationHistory.push({ role: 'user', content: message });
+
+            // Show typing indicator
+            const typingIndicator = addTypingIndicator();
+
+            try {
+                const response = await fetch('/api/chatbot/message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        account_id: currentAccountId,
+                        conversation_history: conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Remove typing indicator
+                typingIndicator.remove();
+
+                if (response.ok) {
+                    // Add assistant response
+                    addMessage(data.response, 'assistant');
+                    
+                    // Store assistant response in conversation history
+                    conversationHistory.push({ role: 'assistant', content: data.response });
+                    
+                    // If there was a tool action, show system message
+                    if (data.tool_result) {
+                        addMessage(data.tool_result, 'system');
+                        conversationHistory.push({ role: 'system', content: data.tool_result });
+                    }
+                    
+                    // Keep chat open - don't refresh page automatically
+                    // Only refresh if explicitly needed
+                    if (data.refresh_needed) {
+                        // Show a subtle notification instead of full page refresh
+                        showRefreshNotification();
+                    }
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+                }
+            } catch (error) {
+                console.error('Chatbot error:', error);
+                typingIndicator.remove();
+                addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            chatbotMessages.appendChild(messageDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            return messageDiv;
+        }
+
+                function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <span>Assistant is typing</span>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            chatbotMessages.appendChild(typingDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            return typingDiv;
+        }
+
+        function showRefreshNotification() {
+            // Create a subtle notification instead of full page refresh
+            const notification = document.createElement('div');
+            notification.className = 'message system';
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🔄</span>
+                    <span>Data updated! You can continue chatting or refresh the page to see changes.</span>
+                    <button onclick="window.location.reload()" style="background: var(--tmobile-magenta); color: white; border: none; border-radius: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.8rem; cursor: pointer;">Refresh</button>
+                </div>
+            `;
+            chatbotMessages.appendChild(notification);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            
+            // Auto-remove notification after 10 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 10000);
+        }
+
+        // Add a Line Modal Functions
+        function resetModalForm() {
+            // Reset all form fields
+            document.getElementById('deviceType').value = '';
+            document.getElementById('deviceModel').value = '';
+            document.getElementById('deviceColor').value = '';
+            document.getElementById('deviceStorage').value = '';
+            document.getElementById('deviceQuantity').value = '1';
+            document.getElementById('areaCode').value = '';
+            document.getElementById('employeeName').value = '';
+            
+            // Disable dependent fields
+            document.getElementById('deviceModel').disabled = true;
+            document.getElementById('deviceColor').disabled = true;
+            document.getElementById('deviceStorage').disabled = true;
+            
+            // Hide device details
+            document.getElementById('deviceDetails').style.display = 'none';
+            
+            // Reset plan selection
+            document.querySelectorAll('input[name="planOption"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            // Reset protection selection
+            document.getElementById('noProtection').checked = true;
+            
+            // Reset trade-in selection
+            document.getElementById('noTradeIn').checked = true;
+            document.getElementById('tradeInDetails').style.display = 'none';
+            
+            // Reset trade-in form fields
+            document.getElementById('tradeInBrand').value = '';
+            document.getElementById('tradeInModel').value = '';
+            document.getElementById('tradeInCondition').value = '';
+            document.getElementById('tradeInValue').value = '';
+        }
+
+        function updateProgress() {
+            // Update progress steps
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+                const stepNumber = index + 1;
+                step.classList.remove('active', 'completed');
+                
+                if (stepNumber < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNumber === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+            
+            // Show current step content
+            document.querySelectorAll('.step-content').forEach((content, index) => {
+                content.classList.remove('active');
+                if (index + 1 === currentStep) {
+                    content.classList.add('active');
+                }
+            });
+        }
+
+        function updateModalButtons() {
+            const prevBtn = document.getElementById('prevStepBtn');
+            const nextBtn = document.getElementById('nextStepBtn');
+            const completeBtn = document.getElementById('completeAddLineOrderBtn');
+            
+            // Show/hide buttons based on current step
+            prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+            nextBtn.style.display = currentStep < 6 ? 'block' : 'none';
+            completeBtn.style.display = currentStep === 6 ? 'block' : 'none';
+            
+            // Update button text
+            if (currentStep === 5) {
+                nextBtn.textContent = 'Proceed to Checkout';
+            } else if (currentStep === 6) {
+                nextBtn.style.display = 'none';
+            } else {
+                nextBtn.textContent = 'Next';
+            }
+            
+            // Enable/disable next button based on validation
+            nextBtn.disabled = !validateCurrentStep();
+        }
+
+        function validateCurrentStep() {
+            switch (currentStep) {
+                case 1: // Device selection
+                    return document.getElementById('deviceType').value && 
+                           document.getElementById('deviceModel').value && 
+                           document.getElementById('deviceColor').value && 
+                           document.getElementById('deviceStorage').value &&
+                           document.getElementById('areaCode').value &&
+                           document.getElementById('employeeName').value.trim();
+                case 2: // Plan selection
+                    return document.querySelector('input[name="planOption"]:checked');
+                case 3: // Protection selection
+                    return document.querySelector('input[name="protectionOption"]:checked');
+                case 4: // Trade-in selection
+                    const tradeInSelected = document.getElementById('yesTradeIn').checked;
+                    if (tradeInSelected) {
+                        return document.getElementById('tradeInBrand').value && 
+                               document.getElementById('tradeInModel').value && 
+                               document.getElementById('tradeInCondition').value;
+                    }
+                    return true;
+                case 5: // Summary
+                    return true;
+                case 6: // Checkout
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        function saveCurrentStepData() {
+            switch (currentStep) {
+                case 1:
+                    const deviceType = document.getElementById('deviceType').value;
+                    const deviceModel = document.getElementById('deviceModel').value;
+                    const deviceColor = document.getElementById('deviceColor').value;
+                    const deviceStorage = document.getElementById('deviceStorage').value;
+                    const deviceQuantity = parseInt(document.getElementById('deviceQuantity').value);
+                    const areaCode = document.getElementById('areaCode').value;
+                    const employeeName = document.getElementById('employeeName').value.trim();
+                    
+                    if (deviceType && deviceModel && deviceColor && deviceStorage && areaCode && employeeName) {
+                        const deviceInfo = deviceData[deviceType][deviceModel];
+                        orderData.device = {
+                            type: deviceType,
+                            model: deviceModel,
+                            color: deviceColor,
+                            storage: deviceStorage,
+                            quantity: deviceQuantity,
+                            msrp: deviceInfo.msrp,
+                            image: deviceInfo.image
+                        };
+                        orderData.line = {
+                            areaCode: areaCode,
+                            employeeName: employeeName
+                        };
+                    }
+                    break;
+                case 2:
+                    const selectedPlan = document.querySelector('input[name="planOption"]:checked');
+                    if (selectedPlan) {
+                        const planKey = selectedPlan.value;
+                        orderData.plan = {
+                            key: planKey,
+                            ...planData[planKey]
+                        };
+                    }
+                    break;
+                case 3:
+                    const selectedProtection = document.querySelector('input[name="protectionOption"]:checked');
+                    if (selectedProtection) {
+                        const protectionKey = selectedProtection.value;
+                        orderData.protection = {
+                            key: protectionKey,
+                            ...protectionData[protectionKey]
+                        };
+                    }
+                    break;
+                case 4:
+                    const tradeInSelected = document.getElementById('yesTradeIn').checked;
+                    if (tradeInSelected) {
+                        orderData.tradeIn = {
+                            brand: document.getElementById('tradeInBrand').value,
+                            model: document.getElementById('tradeInModel').value,
+                            condition: document.getElementById('tradeInCondition').value,
+                            value: parseFloat(document.getElementById('tradeInValue').value) || 0
+                        };
+                    } else {
+                        orderData.tradeIn = { value: 0 };
+                    }
+                    break;
+            }
+        }
+
+        function updateSummary() {
+            // Update device summary
+            if (orderData.device.model) {
+                document.getElementById('summaryDeviceTitle').textContent = `${orderData.device.model} (${orderData.device.quantity})`;
+                document.getElementById('summaryDeviceDetails').textContent = 
+                    `${orderData.device.color}, ${orderData.device.storage}`;
+                document.getElementById('summaryDevicePrice').textContent = 
+                    `$${(orderData.device.msrp * orderData.device.quantity).toFixed(2)}`;
+                document.getElementById('summaryDeviceMSRP').textContent = 
+                    `MSRP: $${(orderData.device.msrp * orderData.device.quantity).toFixed(2)}`;
+                document.getElementById('summaryDeviceMonthly').textContent = 
+                    `$${((orderData.device.msrp * orderData.device.quantity) / 24).toFixed(2)}/mo.`;
+            }
+            
+            // Update plan summary
+            if (orderData.plan.name) {
+                document.getElementById('summaryPlanTitle').textContent = 'Plan';
+                document.getElementById('summaryPlanDetails').textContent = orderData.plan.name;
+                document.getElementById('summaryPlanPrice').textContent = `$${orderData.plan.price.toFixed(2)}/mo.`;
+                document.getElementById('summaryPlanMonthly').textContent = `$${orderData.plan.price.toFixed(2)}/mo.`;
+            }
+            
+            // Update protection summary
+            if (orderData.protection.name) {
+                document.getElementById('summaryProtectionTitle').textContent = 'Device Protection';
+                document.getElementById('summaryProtectionDetails').textContent = orderData.protection.name;
+                document.getElementById('summaryProtectionPrice').textContent = `$${orderData.protection.price.toFixed(2)}/mo.`;
+                document.getElementById('summaryProtectionMonthly').textContent = `$${orderData.protection.price.toFixed(2)}/mo.`;
+            }
+            
+            // Update trade-in summary
+            if (orderData.tradeIn.value > 0) {
+                document.getElementById('summaryTradeInItem').style.display = 'block';
+                document.getElementById('summaryTradeInTitle').textContent = 'Trade-in Credit';
+                document.getElementById('summaryTradeInDetails').textContent = 
+                    `${orderData.tradeIn.brand} ${orderData.tradeIn.model} (${orderData.tradeIn.condition})`;
+                document.getElementById('summaryTradeInValue').textContent = `-$${orderData.tradeIn.value.toFixed(2)}`;
+            } else {
+                document.getElementById('summaryTradeInItem').style.display = 'none';
+            }
+            
+            // Calculate totals
+            const deviceMonthly = orderData.device.msrp ? (orderData.device.msrp * orderData.device.quantity) / 24 : 0;
+            const planMonthly = orderData.plan.price || 0;
+            const protectionMonthly = orderData.protection.price || 0;
+            const totalMonthly = deviceMonthly + planMonthly + protectionMonthly;
+            
+            const simKitCharge = 20.00;
+            const deviceDownPayment = orderData.device.msrp ? (orderData.device.msrp * orderData.device.quantity) * 0.333 : 0;
+            const dueNow = simKitCharge + deviceDownPayment - (orderData.tradeIn.value || 0);
+            
+            document.getElementById('summaryTotalMonthly').textContent = `$${totalMonthly.toFixed(2)}/mo.`;
+            document.getElementById('summaryDueNow').textContent = `$${Math.max(0, dueNow).toFixed(2)}`;
+            
+            // Store summary data
+            orderData.summary = {
+                deviceMonthly,
+                planMonthly,
+                protectionMonthly,
+                totalMonthly,
+                dueNow: Math.max(0, dueNow),
+                simKitCharge
+            };
+        }
+
+        function updateCheckout() {
+            // Populate checkout order summary
+            const checkoutSummary = document.getElementById('checkoutOrderSummary');
+            let summaryHTML = '';
+            
+            if (orderData.device.model) {
+                summaryHTML += `
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="mb-1">${orderData.device.model} (${orderData.device.quantity})</h6>
+                            <div class="text-muted small">${orderData.device.color}, ${orderData.device.storage}</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="h6 text-primary">$${((orderData.device.msrp * orderData.device.quantity) / 24).toFixed(2)}/mo.</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (orderData.plan.name) {
+                summaryHTML += `
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="mb-1">${orderData.plan.name}</h6>
+                        </div>
+                        <div class="text-end">
+                            <span class="h6 text-primary">$${orderData.plan.price.toFixed(2)}/mo.</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (orderData.protection.name && orderData.protection.price > 0) {
+                summaryHTML += `
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="mb-1">${orderData.protection.name}</h6>
+                        </div>
+                        <div class="text-end">
+                            <span class="h6 text-primary">$${orderData.protection.price.toFixed(2)}/mo.</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            checkoutSummary.innerHTML = summaryHTML;
+            
+            // Update checkout totals
+            const subtotal = orderData.summary.dueNow;
+            const taxes = Math.round(subtotal * 0.08 * 100) / 100; // 8% tax
+            const total = subtotal + taxes;
+            
+            document.getElementById('checkoutSubtotalFinal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('checkoutTaxesFinal').textContent = `$${taxes.toFixed(2)}`;
+            document.getElementById('checkoutTotalFinal').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Event listeners for modal functionality
+        document.getElementById('nextStepBtn').addEventListener('click', function() {
+            if (validateCurrentStep()) {
+                saveCurrentStepData();
+                currentStep++;
+                updateProgress();
+                updateModalButtons();
+                
+                if (currentStep === 5) {
+                    updateSummary();
+                } else if (currentStep === 6) {
+                    updateCheckout();
+                }
+            }
+        });
+
+        document.getElementById('prevStepBtn').addEventListener('click', function() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateProgress();
+                updateModalButtons();
+            }
+        });
+
+        document.getElementById('completeAddLineOrderBtn').addEventListener('click', async function() {
+            // Disable button and show loading state
+            const completeBtn = this;
+            completeBtn.disabled = true;
+            completeBtn.textContent = 'Processing...';
+            
+            try {
+                const requestData = {
+                    account_id: currentAccountId,
+                    device: orderData.device,
+                    plan: orderData.plan,
+                    protection: orderData.protection,
+                    tradeIn: orderData.tradeIn,
+                    line: orderData.line,
+                    summary: orderData.summary
+                };
+                
+                const response = await fetch('/api/lines/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Success - close modal and show confirmation
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addLineModal'));
+                    modal.hide();
+                    
+                    setTimeout(() => {
+                        showComingSoonModal(
+                            'Line Created Successfully!', 
+                            `Your new line has been created successfully!\n\nLine Details:\n• Phone Number: ${data.line.msdn}\n• Employee: ${data.line.employee_name}\n• Device: ${data.line.device_details}\n• Plan: ${data.line.plan_name}\n\nYou will receive confirmation via SMS and email. Device will be shipped within 2-3 business days.`
+                        );
+                        
+                        // Navigate back to account summary to show the new line
+                        setTimeout(() => {
+                            window.location.href = window.location.pathname + '?line_added=true';
+                        }, 3000);
+                    }, 300);
+                } else {
+                    // Error from API
+                    alert(`Error: ${data.error || 'Failed to create line'}`);
+                }
+                
+            } catch (error) {
+                console.error('Error creating line:', error);
+                alert('Error: Failed to create line. Please try again.');
+            }
+            
+            // Re-enable button
+            completeBtn.disabled = false;
+            completeBtn.textContent = 'Complete Order';
+        });
+
+        // Device selection event listeners
+        document.getElementById('deviceType').addEventListener('change', function() {
+            const deviceType = this.value;
+            const deviceModelSelect = document.getElementById('deviceModel');
+            const deviceColorSelect = document.getElementById('deviceColor');
+            const deviceStorageSelect = document.getElementById('deviceStorage');
+            
+            // Reset dependent fields
+            deviceModelSelect.innerHTML = '<option value="">Select device type first...</option>';
+            deviceColorSelect.innerHTML = '<option value="">Select model first...</option>';
+            deviceStorageSelect.innerHTML = '<option value="">Select model first...</option>';
+            deviceColorSelect.disabled = true;
+            deviceStorageSelect.disabled = true;
+            
+            if (deviceType && deviceData[deviceType]) {
+                deviceModelSelect.disabled = false;
+                Object.keys(deviceData[deviceType]).forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    deviceModelSelect.appendChild(option);
+                });
+            } else {
+                deviceModelSelect.disabled = true;
+            }
+            
+            updateModalButtons();
+        });
+
+        document.getElementById('deviceModel').addEventListener('change', function() {
+            const deviceType = document.getElementById('deviceType').value;
+            const deviceModel = this.value;
+            const deviceColorSelect = document.getElementById('deviceColor');
+            const deviceStorageSelect = document.getElementById('deviceStorage');
+            
+            // Reset dependent fields
+            deviceColorSelect.innerHTML = '<option value="">Select model first...</option>';
+            deviceStorageSelect.innerHTML = '<option value="">Select model first...</option>';
+            deviceColorSelect.disabled = true;
+            deviceStorageSelect.disabled = true;
+            
+            if (deviceType && deviceModel && deviceData[deviceType][deviceModel]) {
+                const deviceInfo = deviceData[deviceType][deviceModel];
+                
+                // Populate colors
+                deviceColorSelect.disabled = false;
+                deviceInfo.colors.forEach(color => {
+                    const option = document.createElement('option');
+                    option.value = color;
+                    option.textContent = color;
+                    deviceColorSelect.appendChild(option);
+                });
+                
+                // Populate storage
+                deviceStorageSelect.disabled = false;
+                deviceInfo.storage.forEach(storage => {
+                    const option = document.createElement('option');
+                    option.value = storage;
+                    option.textContent = storage;
+                    deviceStorageSelect.appendChild(option);
+                });
+            }
+            
+            updateModalButtons();
+        });
+
+        document.getElementById('deviceColor').addEventListener('change', updateModalButtons);
+        document.getElementById('deviceStorage').addEventListener('change', updateModalButtons);
+        document.getElementById('areaCode').addEventListener('change', updateModalButtons);
+        document.getElementById('employeeName').addEventListener('input', updateModalButtons);
+
+        // Device details update
+        function updateDeviceDetails() {
+            const deviceType = document.getElementById('deviceType').value;
+            const deviceModel = document.getElementById('deviceModel').value;
+            const deviceColor = document.getElementById('deviceColor').value;
+            const deviceStorage = document.getElementById('deviceStorage').value;
+            
+            if (deviceType && deviceModel && deviceColor && deviceStorage) {
+                const deviceInfo = deviceData[deviceType][deviceModel];
+                const deviceDetails = document.getElementById('deviceDetails');
+                
+                document.getElementById('deviceImage').src = deviceInfo.image;
+                document.getElementById('deviceTitle').textContent = deviceModel;
+                document.getElementById('deviceDescription').textContent = `${deviceColor}, ${deviceStorage}`;
+                document.getElementById('deviceMSRP').textContent = `$${deviceInfo.msrp.toFixed(2)}`;
+                
+                deviceDetails.style.display = 'block';
+            } else {
+                document.getElementById('deviceDetails').style.display = 'none';
+            }
+        }
+
+        document.getElementById('deviceColor').addEventListener('change', updateDeviceDetails);
+        document.getElementById('deviceStorage').addEventListener('change', updateDeviceDetails);
+
+        // Plan selection event listeners
+        document.querySelectorAll('input[name="planOption"]').forEach(radio => {
+            radio.addEventListener('change', updateModalButtons);
+        });
+
+        // Protection selection event listeners
+        document.querySelectorAll('input[name="protectionOption"]').forEach(radio => {
+            radio.addEventListener('change', updateModalButtons);
+        });
+
+        // Trade-in selection event listeners
+        document.getElementById('yesTradeIn').addEventListener('change', function() {
+            const tradeInDetails = document.getElementById('tradeInDetails');
+            tradeInDetails.style.display = this.checked ? 'block' : 'none';
+            updateModalButtons();
+        });
+
+        document.getElementById('noTradeIn').addEventListener('change', function() {
+            const tradeInDetails = document.getElementById('tradeInDetails');
+            tradeInDetails.style.display = 'none';
+            updateModalButtons();
+        });
+
+        // Trade-in value calculation
+        document.getElementById('tradeInCondition').addEventListener('change', function() {
+            const brand = document.getElementById('tradeInBrand').value;
+            const model = document.getElementById('tradeInModel').value;
+            const condition = this.value;
+            
+            if (brand && model && condition) {
+                // Simple trade-in value calculation
+                let baseValue = 200; // Base value for any device
+                const conditionMultiplier = {
+                    'excellent': 1.0,
+                    'good': 0.8,
+                    'fair': 0.6,
+                    'poor': 0.3
+                };
+                
+                const calculatedValue = baseValue * conditionMultiplier[condition];
+                document.getElementById('tradeInValue').value = calculatedValue.toFixed(2);
+            }
+        });
+
+        // Trade-in form validation
+        document.getElementById('tradeInBrand').addEventListener('change', updateModalButtons);
+        document.getElementById('tradeInModel').addEventListener('input', updateModalButtons);
+        document.getElementById('tradeInCondition').addEventListener('change', updateModalButtons);
+
+        // Edit Payment Date Functions
+        function editLinePaymentDate(lineId, lineName, employeeName, currentDate) {
+            currentEditingLineId = lineId;
+            document.getElementById('editLineName').textContent = lineName;
+            document.getElementById('editEmployeeName').textContent = employeeName;
+            document.getElementById('editPaymentDate').value = currentDate;
+            
+            const modal = new bootstrap.Modal(document.getElementById('editPaymentDateModal'));
+            modal.show();
+        }
+
+        document.getElementById('savePaymentDateBtn').addEventListener('click', async function() {
+            const paymentDate = document.getElementById('editPaymentDate').value;
+            
+            if (!paymentDate) {
+                alert('Please select a payment due date');
+                return;
+            }
+            
+            const saveBtn = this;
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            
+            try {
+                const response = await fetch('/api/lines/update-payment-date/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        line_id: currentEditingLineId,
+                        payment_date: paymentDate
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editPaymentDateModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    alert('Payment due date updated successfully!');
+                    
+                    // Refresh the page to show updated data
+                    window.location.reload();
+                } else {
+                    alert(`Error: ${data.error || 'Failed to update payment date'}`);
+                }
+            } catch (error) {
+                console.error('Error updating payment date:', error);
+                alert('Error: Failed to update payment date. Please try again.');
+            }
+            
+            // Re-enable button
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Changes';
+        });
+    </script>
+</body>
+</html> 

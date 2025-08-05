@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-Mobile Portal Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: #f5f5f7;
+            color: #222;
+        }
+        .tmobile-header {
+            background: #fff;
+            color: #E20074;
+            padding: 1rem 0 1rem 0;
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .tmobile-header .tmobile-logo {
+            height: 40px;
+            margin-right: 1rem;
+        }
+        .tmobile-header .tmobile-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #E20074;
+            margin-bottom: 0;
+        }
+        .tmobile-header .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .tmobile-header .profile-section .tmobile-profile-icon {
+            font-size: 1.5rem;
+            color: #E20074;
+        }
+        .tmobile-header .profile-section .tmobile-topbar-label {
+            color: #222;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .tmobile-header .profile-section .btn {
+            border-radius: 2rem;
+            font-weight: 500;
+            padding: 0.3rem 1.2rem;
+            margin-left: 0.5rem;
+        }
+        @media (max-width: 767.98px) {
+            .tmobile-header .container {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0.5rem;
+            }
+            .tmobile-header .profile-section {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .tmobile-header .tmobile-title {
+                font-size: 1.1rem;
+            }
+        }
+        .tmobile-topbar {
+            display: none;
+        }
+        .tmobile-topbar-left, .tmobile-topbar-center, .tmobile-topbar-right {
+            display: flex;
+            align-items: center;
+        }
+        .tmobile-topbar-center {
+            flex: 1;
+            justify-content: center;
+        }
+        .tmobile-logo {
+            height: 40px;
+            width: 40px;
+        }
+        .tmobile-topbar-label {
+            margin-left: 0.5rem;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        .tmobile-profile-icon {
+            font-size: 1.5rem;
+        }
+        .tmobile-welcome {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.5rem 0;
+            text-align: left;
+        }
+        .tmobile-news-bar {
+            background: linear-gradient(90deg, #fff 80%, #ffe3f1 100%);
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 2rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            font-size: 1.1rem;
+            position: relative;
+            max-width: 100%;
+        }
+        .tmobile-news-bar .news-title {
+            color: #E20074;
+            font-weight: 600;
+            font-size: 1.35rem;
+        }
+        .tmobile-news-bar .news-link {
+            color: #E20074;
+            text-decoration: underline;
+            margin-left: 1rem;
+            font-weight: 500;
+            font-size: 1.13rem;
+        }
+        .tmobile-news-bar .news-link:hover {
+            color: #b8005a;
+            text-decoration: underline;
+        }
+        .tmobile-news-bar .badge {
+            background: #E20074;
+            color: #fff;
+            font-size: 0.95rem;
+            vertical-align: middle;
+            margin-left: 0.5rem;
+        }
+        .tmobile-metrics {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 2rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #E20074;
+        }
+        .metric-label {
+            color: #555;
+            font-size: 1.1rem;
+        }
+        .metric-number a:hover {
+            text-decoration: none;
+        }
+        .metric-number a:hover .metric-number {
+            color: #b8005a;
+        }
+        .quick-actions .btn {
+            background: #E20074;
+            color: #fff;
+            border: none;
+            margin: 0.25rem 0.5rem 0.25rem 0;
+            transition: background 0.2s;
+        }
+        .quick-actions .btn:hover {
+            background: #b8005a;
+        }
+        .activity-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .status-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        .status-active { background: #00c853; }
+        .status-suspended { background: #ffab00; }
+        .status-cancelled { background: #d50000; }
+        .view-all {
+            color: #E20074;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .view-all:hover {
+            text-decoration: underline;
+        }
+        /* Responsive styles for mobile */
+        @media (max-width: 767.98px) {
+            .tmobile-topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0.5rem 1rem;
+            }
+            .tmobile-topbar-center {
+                justify-content: flex-start;
+                width: 100%;
+                margin: 0.5rem 0;
+            }
+            .tmobile-topbar-left, .tmobile-topbar-right {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .tmobile-topbar-label {
+                font-size: 1rem;
+            }
+            .tmobile-welcome {
+                font-size: 1.1rem;
+                margin: 1rem 0 0.5rem 0;
+            }
+            .tmobile-news-bar {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center;
+                padding: 1.5rem 0.5rem;
+                gap: 1rem;
+            }
+            .tmobile-news-bar .news-title {
+                font-size: 1.1rem;
+            }
+            .tmobile-news-bar .news-link {
+                font-size: 1rem;
+                margin-left: 0;
+                margin-top: 0.75rem;
+                width: 100%;
+                text-align: center;
+            }
+            .tmobile-news-bar .badge {
+                margin-left: 0.5rem;
+            }
+            .tmobile-news-bar .me-4 {
+                margin-right: 0 !important;
+                margin-bottom: 1rem !important;
+            }
+            .tmobile-metrics {
+                padding: 1.2rem 0.8rem;
+            }
+            .metric-number {
+                font-size: 1.5rem;
+            }
+            .metric-label {
+                font-size: 1rem;
+            }
+            .activity-card {
+                padding: 1rem;
+            }
+            .quick-actions {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+            }
+            .quick-actions .btn {
+                width: 100%;
+                margin: 0 !important;
+                font-size: 1.1rem;
+                padding: 1rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tmobile-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <img src="{% static 'logo.svg' %}" alt="T-Mobile Logo" class="tmobile-logo">
+                <span class="tmobile-title">T-Mobile Portal</span>
+            </div>
+            <div class="profile-section">
+                <i class="bi bi-person-circle tmobile-profile-icon"></i>
+                <span class="tmobile-topbar-label">Profile</span>
+                <a href="/logout/" class="btn btn-outline-magenta">Logout</a>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-2">
+        <div class="tmobile-welcome">Welcome John Smith!</div>
+        <div class="tmobile-news-bar mt-2 mb-4 d-flex align-items-center position-relative mx-auto flex-wrap flex-md-nowrap" style="overflow: hidden; max-width: 100%; border-radius: 1rem; padding: 2rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); background: linear-gradient(90deg, #fff 80%, #ffe3f1 100%);">
+            <div class="me-4 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #E20074 60%, #fff 100%); border-radius: 50%; width: 64px; height: 64px; box-shadow: 0 2px 8px rgba(226,0,116,0.15);">
+                <i class="bi bi-megaphone-fill" style="color: #fff; font-size: 2.2rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+                <span class="news-title" style="font-size: 1.35rem; font-weight: 600;">Latest News or Promotions</span>
+                <span class="badge bg-danger ms-2" style="background: #E20074; font-size: 0.95rem;">NEW</span><br>
+                <span class="d-block mt-1" style="font-size: 1.13rem; color: #333;">Introducing T-Mobile Wallet!</span>
+            </div>
+            <a href="#" class="news-link ms-3" style="font-weight: 500; font-size: 1.13rem;">Click here for more details <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <!-- Metrics Row -->
+        <div class="row tmobile-metrics text-center gy-3">
+            <div class="col-6 col-md-3 mb-3 mb-md-0">
+                <div class="metric-number">{{ total_accounts }}</div>
+                <div class="metric-label">Total Accounts</div>
+            </div>
+            <div class="col-6 col-md-3 mb-3 mb-md-0">
+                <a href="/lines/" style="text-decoration: none; color: inherit;">
+                    <div class="metric-number">{{ total_lines }}</div>
+                    <div class="metric-label">Total Lines</div>
+                </a>
+            </div>
+            <div class="col-4 col-md-2 mb-3 mb-md-0">
+                <a href="/lines/?status=ACTIVE" style="text-decoration: none; color: inherit;">
+                    <div class="metric-number" style="color:#00c853;">{{ active_lines }}</div>
+                    <div class="metric-label">Active</div>
+                </a>
+            </div>
+            <div class="col-4 col-md-2 mb-3 mb-md-0">
+                <a href="/lines/?status=SUSPENDED" style="text-decoration: none; color: inherit;">
+                    <div class="metric-number" style="color:#ffab00;">{{ suspended_lines }}</div>
+                    <div class="metric-label">Suspended</div>
+                </a>
+            </div>
+            <div class="col-4 col-md-2 mb-3 mb-md-0">
+                <a href="/lines/?status=CANCELLED" style="text-decoration: none; color: inherit;">
+                    <div class="metric-number" style="color:#d50000;">{{ cancelled_lines }}</div>
+                    <div class="metric-label">Cancelled</div>
+                </a>
+            </div>
+        </div>
+        <div class="row gy-3">
+            <!-- Recent Accounts -->
+            <div class="col-12 col-md-6">
+                <div class="activity-card">
+                    <h5>Recent Accounts <a href="/accounts/" class="view-all float-end">View All</a></h5>
+                    <ul class="list-group list-group-flush mt-3">
+                        {% if recent_accounts %}
+                            {% for account in recent_accounts %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="/accounts/{{ account.id }}/">Account #{{ account.account_number }}</a> 
+                                <span class="text-muted small">{{ account.created_on|timesince }} ago</span>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-muted">No accounts found</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <!-- Recent Transactions -->
+            <div class="col-12 col-md-6">
+                <div class="activity-card">
+                    <h5>Recent Transactions <a href="#" class="view-all float-end">View All</a></h5>
+                    <ul class="list-group list-group-flush mt-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><span class="status-dot status-active"></span>Payment Received</span>
+                            <span class="text-success small">Successful</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><span class="status-dot status-suspended"></span>Line Suspended</span>
+                            <span class="text-warning small">Pending</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><span class="status-dot status-cancelled"></span>Account Cancelled</span>
+                            <span class="text-danger small">Failed</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Quick Actions -->
+        <div class="quick-actions mb-4 d-flex flex-wrap flex-md-nowrap gap-2">
+            <a href="/add-line/" class="btn btn-lg flex-fill">Add Line</a>
+            <button class="btn btn-lg flex-fill">Upgrade</button>
+            <button class="btn btn-lg flex-fill">Add Service</button>
+            <button class="btn btn-lg flex-fill">Suspend</button>
+            <button class="btn btn-lg flex-fill">Resume/Restore</button>
+            <button class="btn btn-lg flex-fill">Cancel</button>
+            <button class="btn btn-lg flex-fill">Line Identifier</button>
+            <button class="btn btn-lg flex-fill">SIM SWAP</button>
+        </div>
+    </div>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
