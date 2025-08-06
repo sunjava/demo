@@ -19,8 +19,30 @@ from .chatbot import chatbot
 # @login_required  # removed for demo
 def hello_world(request):
     """Dashboard view with real account data"""
-    # Get recent accounts (limit to 3 most recent)
-    recent_accounts = Account.objects.all().order_by('-created_on')[:3]
+    # Get recently viewed accounts from session
+    recently_viewed_data = request.session.get('recently_viewed_accounts', {})
+    
+    # Get recently viewed accounts (limit to 3)
+    if recently_viewed_data:
+        # Sort by timestamp (most recent first) and get the first 3
+        sorted_accounts = sorted(recently_viewed_data.items(), key=lambda x: x[1], reverse=True)
+        recent_accounts = []
+        for account_id_str, timestamp in sorted_accounts[:3]:
+            try:
+                account_id = int(account_id_str)
+                account = Account.objects.get(id=account_id)
+                # Add the last viewed timestamp to the account object
+                from django.utils import timezone
+                from datetime import datetime
+                account.last_viewed = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                recent_accounts.append(account)
+            except (Account.DoesNotExist, ValueError):
+                # Remove invalid account IDs from session
+                del recently_viewed_data[account_id_str]
+                request.session['recently_viewed_accounts'] = recently_viewed_data
+    else:
+        # Fallback to recently modified accounts if no recently viewed
+        recent_accounts = Account.objects.all().order_by('-last_modified_on')[:3]
     
     # Get account statistics
     total_accounts = Account.objects.count()
@@ -41,7 +63,7 @@ def hello_world(request):
 
 def all_accounts(request):
     """Display all accounts in a list format"""
-    accounts = Account.objects.all().order_by('-created_on')
+    accounts = Account.objects.all().order_by('-last_modified_on')
     
     # Get statistics for each account
     for account in accounts:
@@ -58,10 +80,10 @@ def all_accounts(request):
 
 def all_lines(request):
     """Display all lines across all accounts grouped by account and sorted by created date"""
-    # Get accounts with their lines, ordered by account creation date (newest first)
+    # Get accounts with their lines, ordered by account last modified date (newest first)
     accounts_with_lines = Account.objects.prefetch_related(
         'lines'
-    ).order_by('-created_on')
+    ).order_by('-last_modified_on')
     
     # Get statistics
     total_lines = Line.objects.count()
@@ -106,6 +128,23 @@ def account_details(request, account_id):
     """Display account details with lines loaded from database"""
     account = get_object_or_404(Account, id=account_id)
     lines = account.lines.all().order_by('line_name')
+    
+    # Track recently viewed accounts in session with timestamps
+    recently_viewed_data = request.session.get('recently_viewed_accounts', {})
+    
+    # Add current timestamp for this account
+    from django.utils import timezone
+    current_time = timezone.now().isoformat()
+    recently_viewed_data[str(account_id)] = current_time
+    
+    # Keep only the last 10 recently viewed accounts
+    if len(recently_viewed_data) > 10:
+        # Sort by timestamp and keep only the 10 most recent
+        sorted_accounts = sorted(recently_viewed_data.items(), key=lambda x: x[1], reverse=True)
+        recently_viewed_data = dict(sorted_accounts[:10])
+    
+    # Save back to session
+    request.session['recently_viewed_accounts'] = recently_viewed_data
     
     context = {
         'account': account,
@@ -445,7 +484,7 @@ def create_line(request):
         last_day_of_month = calendar.monthrange(today.year, today.month)[1]
         payment_due_date = date(today.year, today.month, last_day_of_month)
         
-        # Create the line
+        # Create the line with device, plan, and protection information
         line = Line.objects.create(
             account=account,
             line_name=f"Line {account.lines.count() + 1}",
@@ -453,22 +492,27 @@ def create_line(request):
             employee_name=line_data.get('employeeName', 'Unknown Employee'),
             employee_number=employee_number,
             status='ACTIVE',
-            payment_due_date=payment_due_date
+            payment_due_date=payment_due_date,
+            
+            # Device information
+            device_model=device_data.get('model', 'Unknown Device'),
+            device_color=device_data.get('color', 'Unknown Color'),
+            device_storage=device_data.get('storage', 'Unknown Storage'),
+            device_price=device_data.get('price', 0),
+            
+            # Plan information
+            plan_name=plan_data.get('name', 'Unknown Plan'),
+            plan_price=plan_data.get('price', 0),
+            plan_data_limit=plan_data.get('dataLimit', 'Unlimited'),
+            
+            # Protection information
+            protection_name=protection_data.get('name', 'No Protection'),
+            protection_price=protection_data.get('price', 0),
+            
+            # Trade-in and total information
+            trade_in_value=trade_in_data.get('value', 0),
+            total_monthly_cost=summary_data.get('totalMonthly', 0)
         )
-        
-        # Create device details (we'll store this as a JSON field in the future)
-        device_details = f"{device_data.get('model', 'Unknown Device')} - {device_data.get('color', 'Unknown Color')}, {device_data.get('storage', 'Unknown Storage')}"
-        
-        # Create plan details
-        plan_name = plan_data.get('name', 'Unknown Plan')
-        plan_price = plan_data.get('price', 0)
-        
-        # Create protection details
-        protection_name = protection_data.get('name', 'No Protection')
-        protection_price = protection_data.get('price', 0)
-        
-        # Create trade-in details
-        trade_in_value = trade_in_data.get('value', 0)
         
         return JsonResponse({
             'success': True,
@@ -480,14 +524,154 @@ def create_line(request):
                 'employee_name': line.employee_name,
                 'employee_number': line.employee_number,
                 'status': line.status,
-                'device_details': device_details,
-                'plan_name': plan_name,
-                'plan_price': plan_price,
-                'protection_name': protection_name,
-                'protection_price': protection_price,
-                'trade_in_value': trade_in_value,
-                'total_monthly': summary_data.get('totalMonthly', 0),
+                'device_details': f"{line.device_model} - {line.device_color}, {line.device_storage}",
+                'plan_name': line.plan_name,
+                'plan_price': float(line.plan_price) if line.plan_price else 0,
+                'protection_name': line.protection_name,
+                'protection_price': float(line.protection_price) if line.protection_price else 0,
+                'trade_in_value': float(line.trade_in_value) if line.trade_in_value else 0,
+                'total_monthly': float(line.total_monthly_cost) if line.total_monthly_cost else 0,
                 'due_now': summary_data.get('dueNow', 0)
+            }
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_line_details(request, line_id):
+    """Get detailed information about a specific line including device, plan, and protection"""
+    try:
+        line = get_object_or_404(Line, id=line_id)
+        
+        return JsonResponse({
+            'success': True,
+            'line': {
+                'id': line.id,
+                'line_name': line.line_name,
+                'msdn': line.msdn,
+                'employee_name': line.employee_name,
+                'employee_number': line.employee_number,
+                'status': line.status,
+                'device_model': line.device_model,
+                'device_color': line.device_color,
+                'device_storage': line.device_storage,
+                'device_price': float(line.device_price) if line.device_price else None,
+                'plan_name': line.plan_name,
+                'plan_price': float(line.plan_price) if line.plan_price else None,
+                'plan_data_limit': line.plan_data_limit,
+                'protection_name': line.protection_name,
+                'protection_price': float(line.protection_price) if line.protection_price else None,
+                'trade_in_value': float(line.trade_in_value) if line.trade_in_value else None,
+                'total_monthly_cost': float(line.total_monthly_cost) if line.total_monthly_cost else None
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_mirrored_line(request):
+    """Create a new line by mirroring an existing line"""
+    try:
+        data = json.loads(request.body)
+        account_id = data.get('account_id')
+        line_to_mirror_id = data.get('line_to_mirror_id')
+        new_employee_name = data.get('new_employee_name')
+        new_line_name = data.get('new_line_name')
+        
+        if not account_id or not line_to_mirror_id or not new_employee_name:
+            return JsonResponse({'error': 'Account ID, line to mirror ID, and new employee name are required'}, status=400)
+        
+        # Validate account exists
+        try:
+            account = Account.objects.get(id=account_id)
+        except Account.DoesNotExist:
+            return JsonResponse({'error': 'Account not found'}, status=404)
+        
+        # Validate line to mirror exists
+        try:
+            line_to_mirror = Line.objects.get(id=line_to_mirror_id, account=account)
+        except Line.DoesNotExist:
+            return JsonResponse({'error': 'Line to mirror not found'}, status=404)
+        
+        # Generate a unique MSDN (phone number)
+        import random
+        area_code = '555'  # Default area code
+        # Generate a random 7-digit number
+        phone_number = f"{random.randint(1000000, 9999999)}"
+        msdn = f"+1-{area_code}-{phone_number[:3]}-{phone_number[3:]}"
+        
+        # Generate employee number
+        employee_number = f"EMP{random.randint(1000, 9999)}"
+        
+        # Calculate payment due date (last day of current month)
+        from datetime import date
+        import calendar
+        today = date.today()
+        last_day_of_month = calendar.monthrange(today.year, today.month)[1]
+        payment_due_date = date(today.year, today.month, last_day_of_month)
+        
+        # Generate a proper line number (Line X) instead of using "Mirrored Line"
+        if not new_line_name or new_line_name.lower() == 'mirrored line':
+            # Count existing lines to get the next line number
+            existing_line_count = account.lines.count()
+            new_line_name = f"Line {existing_line_count + 1}"
+        
+        # Create the new line with same settings as the mirrored line
+        line = Line.objects.create(
+            account=account,
+            line_name=new_line_name,
+            msdn=msdn,
+            employee_name=new_employee_name,
+            employee_number=employee_number,
+            status='ACTIVE',
+            payment_due_date=payment_due_date,
+            
+            # Copy device information from mirrored line
+            device_model=line_to_mirror.device_model,
+            device_color=line_to_mirror.device_color,
+            device_storage=line_to_mirror.device_storage,
+            device_price=line_to_mirror.device_price,
+            
+            # Copy plan information from mirrored line
+            plan_name=line_to_mirror.plan_name,
+            plan_price=line_to_mirror.plan_price,
+            plan_data_limit=line_to_mirror.plan_data_limit,
+            
+            # Copy protection information from mirrored line
+            protection_name=line_to_mirror.protection_name,
+            protection_price=line_to_mirror.protection_price,
+            
+            # Copy trade-in and total information from mirrored line
+            trade_in_value=line_to_mirror.trade_in_value,
+            total_monthly_cost=line_to_mirror.total_monthly_cost
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Mirrored line created successfully',
+            'line': {
+                'id': line.id,
+                'line_name': line.line_name,
+                'msdn': line.msdn,
+                'employee_name': line.employee_name,
+                'employee_number': line.employee_number,
+                'status': line.status,
+                'device_details': f"{line.device_model} - {line.device_color}, {line.device_storage}" if line.device_model else "Not specified",
+                'plan_name': line.plan_name or "Not specified",
+                'protection_name': line.protection_name or "Not specified",
+                'mirrored_from': {
+                    'id': line_to_mirror.id,
+                    'line_name': line_to_mirror.line_name,
+                    'employee_name': line_to_mirror.employee_name
+                }
             }
         })
         
@@ -578,7 +762,62 @@ def chatbot_message(request):
             'response': result.get('response', ''),
             'tool_result': result.get('tool_result'),
             'refresh_needed': result.get('refresh_needed', False),
+            'trigger_modal': result.get('trigger_modal'),
+            'line_to_mirror': result.get('line_to_mirror'),
+            'line_to_mirror_data': result.get('line_to_mirror_data'),
             'success': True
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_line_details(request):
+    """Update employee name and payment due date for a specific line"""
+    try:
+        data = json.loads(request.body)
+        line_id = data.get('line_id')
+        employee_name = data.get('employee_name')
+        payment_date_str = data.get('payment_date')
+        
+        if not line_id or not employee_name or not payment_date_str:
+            return JsonResponse({'error': 'line_id, employee_name, and payment_date are required'}, status=400)
+        
+        # Validate line exists
+        try:
+            line = Line.objects.get(id=line_id)
+        except Line.DoesNotExist:
+            return JsonResponse({'error': 'Line not found'}, status=404)
+        
+        # Parse and validate date
+        try:
+            from datetime import datetime
+            payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=400)
+        
+        # Update the line
+        old_employee_name = line.employee_name
+        old_payment_date = line.payment_due_date
+        line.employee_name = employee_name
+        line.payment_due_date = payment_date
+        line.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Line details updated successfully',
+            'line': {
+                'id': line.id,
+                'line_name': line.line_name,
+                'old_employee_name': old_employee_name,
+                'new_employee_name': employee_name,
+                'old_payment_date': old_payment_date.isoformat() if old_payment_date else None,
+                'new_payment_date': payment_date.isoformat()
+            }
         })
         
     except json.JSONDecodeError:

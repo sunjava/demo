@@ -19,8 +19,7 @@ from .models import Account, Line, Service, LineService
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Set OpenAI API key
-openai.api_key = getattr(settings, 'OPENAI_API_KEY', None)
+# OpenAI API key will be used directly in the client
 
 
 # Tool functions for OpenAI function calling
@@ -300,6 +299,81 @@ def restore_lines(account_id: int, line_identifiers: Optional[List[str]] = None)
         return {"success": False, "error": str(e)}
 
 
+def add_line_to_account(account_id: int, line_name: str = None, employee_name: str = None, employee_number: str = None) -> Dict[str, Any]:
+    """
+    Trigger the Add A Line modal for a T-Mobile account.
+    
+    Args:
+        account_id: The account ID to add the line to
+        line_name: Not used in modal flow
+        employee_name: Not used in modal flow
+        employee_number: Not used in modal flow
+    
+    Returns:
+        Dict containing success status and modal trigger flag
+    """
+    try:
+        account = get_object_or_404(Account, id=account_id)
+        
+        return {
+            "success": True,
+            "results": ["Opening Add A Line modal..."],
+            "trigger_modal": "add_line",
+            "account_id": account_id,
+            "account_number": account.account_number
+        }
+        
+    except Exception as e:
+        logger.error(f"Error triggering add line modal: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def mirror_line(account_id: int, line_identifier: str = None) -> Dict[str, Any]:
+    """
+    Trigger the Mirror Line modal for a T-Mobile account.
+    
+    Args:
+        account_id: The account ID to mirror a line from
+        line_identifier: The line to mirror (name, MSDN, employee name, etc.)
+    
+    Returns:
+        Dict containing success status and modal trigger flag
+    """
+    try:
+        account = get_object_or_404(Account, id=account_id)
+        
+        # If a specific line is provided, find it
+        line_to_mirror = None
+        if line_identifier:
+            line_to_mirror = _find_lines(account, [line_identifier])
+            if line_to_mirror:
+                line_to_mirror = line_to_mirror[0]
+        
+        return {
+            "success": True,
+            "results": ["Opening Mirror Line modal..."],
+            "trigger_modal": "mirror_line",
+            "account_id": account_id,
+            "account_number": account.account_number,
+            "line_to_mirror": line_to_mirror.id if line_to_mirror else None,
+            "line_to_mirror_data": {
+                "id": line_to_mirror.id,
+                "line_name": line_to_mirror.line_name,
+                "employee_name": line_to_mirror.employee_name,
+                "msdn": line_to_mirror.msdn,
+                "device_model": line_to_mirror.device_model,
+                "device_color": line_to_mirror.device_color,
+                "device_storage": line_to_mirror.device_storage,
+                "plan_name": line_to_mirror.plan_name,
+                "protection_name": line_to_mirror.protection_name
+            } if line_to_mirror else None
+        }
+        
+    except Exception as e:
+        logger.error(f"Error triggering mirror line modal: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 def _find_service(service_type: str) -> Optional[Service]:
     """Find service by type or keywords"""
     service_type = service_type.lower()
@@ -364,7 +438,7 @@ class AITMobileChatbot:
     """AI-powered T-Mobile chatbot using OpenAI function calling"""
     
     def __init__(self):
-        self.client = openai.OpenAI(api_key=openai.api_key)
+        self.client = openai.OpenAI(api_key=getattr(settings, 'OPENAI_API_KEY', None))
         
         # Define available functions for OpenAI
         self.functions = [
@@ -462,6 +536,50 @@ class AITMobileChatbot:
                     },
                     "required": ["account_id"]
                 }
+            },
+            {
+                "name": "add_line_to_account",
+                "description": "Add a new line to the T-Mobile account",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "account_id": {
+                            "type": "integer",
+                            "description": "The account ID to add the line to"
+                        },
+                        "line_name": {
+                            "type": "string",
+                            "description": "Name for the new line (e.g., 'Line 1', 'Primary Line'). If not provided, will generate automatically."
+                        },
+                        "employee_name": {
+                            "type": "string",
+                            "description": "Employee name for the line. If not provided, will use 'New Employee'."
+                        },
+                        "employee_number": {
+                            "type": "string",
+                            "description": "Employee number for the line. If not provided, will generate automatically."
+                        }
+                    },
+                    "required": ["account_id"]
+                }
+            },
+            {
+                "name": "mirror_line",
+                "description": "Mirror an existing line to create a new line with the same details",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "account_id": {
+                            "type": "integer",
+                            "description": "The account ID to mirror a line from"
+                        },
+                        "line_identifier": {
+                            "type": "string",
+                            "description": "The line to mirror (name, MSDN, employee name, etc.). If not provided, user will select from available lines."
+                        }
+                    },
+                    "required": ["account_id"]
+                }
             }
         ]
         
@@ -471,7 +589,9 @@ class AITMobileChatbot:
             "list_account_lines": list_account_lines,
             "get_account_summary": get_account_summary,
             "suspend_lines": suspend_lines,
-            "restore_lines": restore_lines
+            "restore_lines": restore_lines,
+            "add_line_to_account": add_line_to_account,
+            "mirror_line": mirror_line
         }
     
     def process_message(self, message: str, account_id: int, conversation_history: List[Dict] = None) -> Dict[str, Any]:
@@ -486,7 +606,8 @@ class AITMobileChatbot:
         Returns:
             Dict with response, tool_result, and refresh_needed flag
         """
-        if not openai.api_key or openai.api_key == 'your_openai_api_key_here':
+        api_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if not api_key or api_key == 'your_openai_api_key_here':
             return {
                 "response": "OpenAI API key not configured. Please set your API key in settings.py",
                 "tool_result": None,
@@ -509,6 +630,8 @@ You can:
 3. Get account summary and statistics
 4. Suspend lines (temporarily disable service)
 5. Restore lines (re-enable suspended lines)
+6. Add new lines to the account
+7. Mirror existing lines to create new lines with the same details
 
 When users mention line identifiers, extract them carefully - they could be:
 - Employee names (John, Sarah, Amanda, etc.)
@@ -648,6 +771,28 @@ Last Modified: {result['last_modified']}"""
                 "response": response,
                 "tool_result": tool_result,
                 "refresh_needed": True
+            }
+            
+        elif function_name == "add_line_to_account":
+            response = f"✅ Opening Add A Line modal for Account #{result['account_number']}"
+            tool_result = "\n".join(result["results"])
+            return {
+                "response": response,
+                "tool_result": tool_result,
+                "refresh_needed": False,
+                "trigger_modal": result.get("trigger_modal")
+            }
+            
+        elif function_name == "mirror_line":
+            response = f"✅ Opening Mirror Line modal for Account #{result['account_number']}"
+            tool_result = "\n".join(result["results"])
+            return {
+                "response": response,
+                "tool_result": tool_result,
+                "refresh_needed": False,
+                "trigger_modal": result.get("trigger_modal"),
+                "line_to_mirror": result.get("line_to_mirror"),
+                "line_to_mirror_data": result.get("line_to_mirror_data")
             }
         
         return {

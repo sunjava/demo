@@ -290,13 +290,15 @@
         <!-- Metrics Row -->
         <div class="row tmobile-metrics text-center gy-3">
             <div class="col-6 col-md-3 mb-3 mb-md-0">
-                <div class="metric-number">{{ total_accounts }}</div>
-                <div class="metric-label">Total Accounts</div>
+                <a href="/accounts/" style="text-decoration: none; color: inherit;">
+                    <div class="metric-number">{{ total_accounts }}</div>
+                    <div class="metric-label">All Accounts</div>
+                </a>
             </div>
             <div class="col-6 col-md-3 mb-3 mb-md-0">
                 <a href="/lines/" style="text-decoration: none; color: inherit;">
                     <div class="metric-number">{{ total_lines }}</div>
-                    <div class="metric-label">Total Lines</div>
+                    <div class="metric-label">All Lines</div>
                 </a>
             </div>
             <div class="col-4 col-md-2 mb-3 mb-md-0">
@@ -319,20 +321,26 @@
             </div>
         </div>
         <div class="row gy-3">
-            <!-- Recent Accounts -->
+            <!-- Recently Viewed Accounts -->
             <div class="col-12 col-md-6">
                 <div class="activity-card">
-                    <h5>Recent Accounts <a href="/accounts/" class="view-all float-end">View All</a></h5>
+                    <h5>Recently Viewed Accounts <a href="/accounts/" class="view-all float-end">View All</a></h5>
                     <ul class="list-group list-group-flush mt-3">
                         {% if recent_accounts %}
                             {% for account in recent_accounts %}
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <a href="/accounts/{{ account.id }}/">Account #{{ account.account_number }}</a> 
-                                <span class="text-muted small">{{ account.created_on|timesince }} ago</span>
+                                <span class="text-muted small">
+                                    {% if account.last_viewed %}
+                                        Viewed {{ account.last_viewed|timesince }} ago
+                                    {% else %}
+                                        {{ account.created_on|timesince }} ago
+                                    {% endif %}
+                                </span>
                             </li>
                             {% endfor %}
                         {% else %}
-                            <li class="list-group-item text-muted">No accounts found</li>
+                            <li class="list-group-item text-muted">No recently viewed accounts. Visit some accounts to see them here.</li>
                         {% endif %}
                     </ul>
                 </div>

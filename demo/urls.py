@@ -23,7 +23,8 @@ from demo_app.views import (
     hello_world, account_details, all_accounts, all_lines, login_view, logout_view, signup_view,
     get_services, add_service_to_lines, get_line_services, get_account_lines,
     suspend_lines, restore_lines, chatbot_message, create_line, update_account_status,
-    add_line_account_selection, update_line_payment_date
+    add_line_account_selection, update_line_payment_date, update_line_details, create_mirrored_line,
+    get_line_details
 )
 
 urlpatterns = [
@@ -46,9 +47,16 @@ urlpatterns = [
     path('api/lines/suspend/', suspend_lines, name='suspend_lines'),
     path('api/lines/restore/', restore_lines, name='restore_lines'),
     path('api/lines/create/', create_line, name='create_line'),
+    path('api/lines/mirror/', create_mirrored_line, name='create_mirrored_line'),
+    path('api/lines/<int:line_id>/details/', get_line_details, name='get_line_details'),
     path('api/lines/update-payment-date/', update_line_payment_date, name='update_line_payment_date'),
+    path('api/lines/update-details/', update_line_details, name='update_line_details'),
     path('api/chatbot/message/', chatbot_message, name='chatbot_message'),
     path('api/accounts/update-status/', update_account_status, name='update_account_status'),
 ]
+# Serve static files in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+else:
+    # In production, serve static files from STATICFILES_DIRS
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])

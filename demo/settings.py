@@ -140,7 +140,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Extra places for collectstatic to find static files.
@@ -163,4 +163,4 @@ CSRF_TRUSTED_ORIGINS = [
 LOGIN_URL = '/login/'
 
 # OpenAI Configuration
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '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')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')

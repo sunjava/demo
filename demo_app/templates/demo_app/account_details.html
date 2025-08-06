@@ -846,7 +846,7 @@
                                     <td><span class="account-attr-value">{{ line.get_status_display }}</span></td>
                                     <td>
                                         <button class="btn btn-outline-primary btn-sm" onclick="editLinePaymentDate({{ line.id }}, '{{ line.line_name }}', '{{ line.employee_name }}', '{{ line.payment_due_date|date:"Y-m-d"|default:"" }}')">
-                                            <i class="bi bi-pencil"></i> Edit
+                                            <i class="bi bi-pencil"></i> Edit Details
                                         </button>
                                     </td>
                                 </tr>
@@ -879,7 +879,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header" style="background: var(--tmobile-magenta); color: white;">
-                    <h5 class="modal-title" id="editPaymentDateModalLabel">Edit Payment Due Date</h5>
+                    <h5 class="modal-title" id="editPaymentDateModalLabel">Edit Line Details</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -887,7 +887,8 @@
                         <label class="form-label"><strong>Line:</strong> <span id="editLineName"></span></label>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label"><strong>Employee:</strong> <span id="editEmployeeName"></span></label>
+                        <label for="editEmployeeName" class="form-label">Employee Name</label>
+                        <input type="text" class="form-control" id="editEmployeeName" required>
                     </div>
                     <div class="mb-3">
                         <label for="editPaymentDate" class="form-label">Payment Due Date</label>
@@ -1027,6 +1028,99 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" id="backToServiceBtn">Back</button>
             <button type="button" class="btn btn-success" id="completeOrderBtn">Complete Order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mirror Line Modal -->
+    <div class="modal fade" id="mirrorLineModal" tabindex="-1" aria-labelledby="mirrorLineModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header" style="background: var(--tmobile-magenta); color: white;">
+            <h5 class="modal-title" id="mirrorLineModalLabel">Mirror a Line</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Step 1: Select Line to Mirror -->
+            <div id="mirrorStep1">
+              <h6 class="mb-4">Select a line to mirror</h6>
+              <p class="text-muted mb-4">Choose an existing line to copy its device, plan, and protection settings for your new line.</p>
+              
+              <div class="mb-3">
+                <label for="lineToMirrorSelect" class="form-label">Select Line:</label>
+                <select class="form-select" id="lineToMirrorSelect" required>
+                  <option value="">Choose a line to mirror...</option>
+                  {% for line in lines %}
+                  <option value="{{ line.id }}" data-line-name="{{ line.line_name }}" data-employee-name="{{ line.employee_name }}" data-msdn="{{ line.msdn }}">
+                    {{ line.line_name }} - {{ line.employee_name }} ({{ line.msdn }})
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <div id="selectedLineDetails" class="card mt-3" style="display: none;">
+                <div class="card-body">
+                  <h6 class="card-title">Line Details to Mirror</h6>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p><strong>Line Name:</strong> <span id="mirrorLineName"></span></p>
+                      <p><strong>Employee:</strong> <span id="mirrorEmployeeName"></span></p>
+                      <p><strong>Phone Number:</strong> <span id="mirrorMsdn"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                      <p><strong>Device:</strong> <span id="mirrorDevice">Not specified</span></p>
+                      <p><strong>Plan:</strong> <span id="mirrorPlan">Not specified</span></p>
+                      <p><strong>Protection:</strong> <span id="mirrorProtection">Not specified</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Step 2: Enter New Employee Details -->
+            <div id="mirrorStep2" style="display: none;">
+              <h6 class="mb-4">Enter New Employee Details</h6>
+              <p class="text-muted mb-4">Provide the details for the new line. Device, plan, and protection settings will be copied from the selected line.</p>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="newEmployeeName" class="form-label">Employee Name *</label>
+                    <input type="text" class="form-control" id="newEmployeeName" placeholder="Enter employee name" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="newLineName" class="form-label">Line Name</label>
+                    <input type="text" class="form-control" id="newLineName" placeholder="Auto-generated">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="card mt-3">
+                <div class="card-body">
+                  <h6 class="card-title">Mirrored Settings</h6>
+                  <div class="row">
+                    <div class="col-md-4">
+                      <p><strong>Device:</strong> <span id="mirrorDevice2">Not specified</span></p>
+                    </div>
+                    <div class="col-md-4">
+                      <p><strong>Plan:</strong> <span id="mirrorPlan2">Not specified</span></p>
+                    </div>
+                    <div class="col-md-4">
+                      <p><strong>Protection:</strong> <span id="mirrorProtection2">Not specified</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="mirrorBackBtn" style="display: none;">Back</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="mirrorNextBtn">Next</button>
+            <button type="button" class="btn btn-success" id="mirrorCompleteBtn" style="display: none;">Complete</button>
           </div>
         </div>
       </div>
@@ -1556,11 +1650,11 @@
                 Welcome! I can help you manage your lines and services. Try commands like:
             </div>
             <div class="chatbot-suggestions">
-                <span class="suggestion-chip" data-suggestion="Add international pass to John Smith's line">Add service to John's line</span>
-                <span class="suggestion-chip" data-suggestion="Show me all active lines">Show active lines</span>
                 <span class="suggestion-chip" data-suggestion="Add 10 day pass to all lines">Add service to all lines</span>
                 <span class="suggestion-chip" data-suggestion="Suspend John Smith's line">Suspend a line</span>
                 <span class="suggestion-chip" data-suggestion="Restore all suspended lines">Restore lines</span>
+                <span class="suggestion-chip" data-suggestion="Add a new line to this account">Add A Line</span>
+                <span class="suggestion-chip" data-suggestion="Mirror an existing line">Mirror a Line</span>
             </div>
         </div>
         <div class="chatbot-input-area">
@@ -1667,12 +1761,18 @@
         resetModalForm();
         
         // Show modal
-        var modal = new bootstrap.Modal(document.getElementById('addLineModal'));
-        modal.show();
+        var modalElement = document.getElementById('addLineModal');
         
-        // Update progress and buttons
-        updateProgress();
-        updateModalButtons();
+        if (modalElement) {
+          var modal = new bootstrap.Modal(modalElement);
+          modal.show();
+          
+          // Update progress and buttons after modal is shown
+          setTimeout(() => {
+            updateProgress();
+            updateModalButtons();
+          }, 100);
+        }
       }
       
       // Check for URL parameters and handle accordingly
@@ -1697,6 +1797,255 @@
           window.history.replaceState({}, document.title, newUrl);
         }, 1000);
       }
+
+      // Mirror Line Modal Functionality
+      let mirrorCurrentStep = 1;
+      let selectedLineToMirror = null;
+
+      // Function to open Mirror Line modal
+      function openMirrorLineModal(preSelectedLineData = null) {
+        // Reset modal state
+        mirrorCurrentStep = 1;
+        selectedLineToMirror = null;
+        
+        // Reset form fields
+        document.getElementById('lineToMirrorSelect').value = '';
+        document.getElementById('newEmployeeName').value = '';
+        document.getElementById('newLineName').value = '';
+        document.getElementById('selectedLineDetails').style.display = 'none';
+        document.getElementById('mirrorStep2').style.display = 'none';
+        
+        // Show step 1
+        document.getElementById('mirrorStep1').style.display = 'block';
+        
+        // Update buttons
+        document.getElementById('mirrorBackBtn').style.display = 'none';
+        document.getElementById('mirrorNextBtn').style.display = 'inline-block';
+        document.getElementById('mirrorCompleteBtn').style.display = 'none';
+        document.getElementById('mirrorNextBtn').disabled = true;
+        
+        // Show modal
+        var modalElement = document.getElementById('mirrorLineModal');
+        if (modalElement) {
+          var modal = new bootstrap.Modal(modalElement);
+          modal.show();
+          
+          // If pre-selected line data is provided, automatically select it
+          if (preSelectedLineData) {
+            setTimeout(() => {
+              // Find and select the line in the dropdown
+              const selectElement = document.getElementById('lineToMirrorSelect');
+              const option = Array.from(selectElement.options).find(opt => opt.value == preSelectedLineData.id);
+              
+              if (option) {
+                selectElement.value = preSelectedLineData.id;
+                
+                // Set the selected line data
+                selectedLineToMirror = {
+                  id: preSelectedLineData.id,
+                  lineName: preSelectedLineData.line_name,
+                  employeeName: preSelectedLineData.employee_name,
+                  msdn: preSelectedLineData.msdn,
+                  deviceModel: preSelectedLineData.device_model,
+                  deviceColor: preSelectedLineData.device_color,
+                  deviceStorage: preSelectedLineData.device_storage,
+                  planName: preSelectedLineData.plan_name,
+                  protectionName: preSelectedLineData.protection_name
+                };
+                
+                // Show line details
+                document.getElementById('mirrorLineName').textContent = selectedLineToMirror.lineName;
+                document.getElementById('mirrorEmployeeName').textContent = selectedLineToMirror.employeeName;
+                document.getElementById('mirrorMsdn').textContent = selectedLineToMirror.msdn;
+                
+                // Show device, plan, and protection details
+                const deviceText = selectedLineToMirror.deviceModel ? 
+                  `${selectedLineToMirror.deviceModel} - ${selectedLineToMirror.deviceColor}, ${selectedLineToMirror.deviceStorage}` : 
+                  'Not specified';
+                document.getElementById('mirrorDevice').textContent = deviceText;
+                document.getElementById('mirrorPlan').textContent = selectedLineToMirror.planName || 'Not specified';
+                document.getElementById('mirrorProtection').textContent = selectedLineToMirror.protectionName || 'Not specified';
+                
+                document.getElementById('selectedLineDetails').style.display = 'block';
+                
+                // Enable Next button
+                document.getElementById('mirrorNextBtn').disabled = false;
+                
+                // Trigger change event to ensure all handlers are called
+                selectElement.dispatchEvent(new Event('change'));
+              }
+            }, 100);
+          }
+        }
+      }
+
+      // Handle line selection in mirror modal
+      document.getElementById('lineToMirrorSelect').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (this.value) {
+          // Get line data from the server to get device, plan, and protection info
+          fetch(`/api/lines/${this.value}/details/`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                selectedLineToMirror = {
+                  id: this.value,
+                  lineName: selectedOption.dataset.lineName,
+                  employeeName: selectedOption.dataset.employeeName,
+                  msdn: selectedOption.dataset.msdn,
+                  deviceModel: data.line.device_model,
+                  deviceColor: data.line.device_color,
+                  deviceStorage: data.line.device_storage,
+                  planName: data.line.plan_name,
+                  protectionName: data.line.protection_name
+                };
+                
+                // Show line details
+                document.getElementById('mirrorLineName').textContent = selectedLineToMirror.lineName;
+                document.getElementById('mirrorEmployeeName').textContent = selectedLineToMirror.employeeName;
+                document.getElementById('mirrorMsdn').textContent = selectedLineToMirror.msdn;
+                
+                // Show device, plan, and protection details
+                const deviceText = selectedLineToMirror.deviceModel ? 
+                  `${selectedLineToMirror.deviceModel} - ${selectedLineToMirror.deviceColor}, ${selectedLineToMirror.deviceStorage}` : 
+                  'Not specified';
+                document.getElementById('mirrorDevice').textContent = deviceText;
+                document.getElementById('mirrorPlan').textContent = selectedLineToMirror.planName || 'Not specified';
+                document.getElementById('mirrorProtection').textContent = selectedLineToMirror.protectionName || 'Not specified';
+                
+                document.getElementById('selectedLineDetails').style.display = 'block';
+                
+                // Enable Next button
+                document.getElementById('mirrorNextBtn').disabled = false;
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching line details:', error);
+              // Fallback to basic info without device/plan/protection
+              selectedLineToMirror = {
+                id: this.value,
+                lineName: selectedOption.dataset.lineName,
+                employeeName: selectedOption.dataset.employeeName,
+                msdn: selectedOption.dataset.msdn
+              };
+              
+              document.getElementById('mirrorLineName').textContent = selectedLineToMirror.lineName;
+              document.getElementById('mirrorEmployeeName').textContent = selectedLineToMirror.employeeName;
+              document.getElementById('mirrorMsdn').textContent = selectedLineToMirror.msdn;
+              document.getElementById('mirrorDevice').textContent = 'Not specified';
+              document.getElementById('mirrorPlan').textContent = 'Not specified';
+              document.getElementById('mirrorProtection').textContent = 'Not specified';
+              document.getElementById('selectedLineDetails').style.display = 'block';
+              document.getElementById('mirrorNextBtn').disabled = false;
+            });
+        } else {
+          selectedLineToMirror = null;
+          document.getElementById('selectedLineDetails').style.display = 'none';
+          document.getElementById('mirrorNextBtn').disabled = true;
+        }
+      });
+
+      // Handle Next button in mirror modal
+      document.getElementById('mirrorNextBtn').addEventListener('click', function() {
+        if (mirrorCurrentStep === 1) {
+          // Move to step 2
+          mirrorCurrentStep = 2;
+          document.getElementById('mirrorStep1').style.display = 'none';
+          document.getElementById('mirrorStep2').style.display = 'block';
+          document.getElementById('mirrorBackBtn').style.display = 'inline-block';
+          document.getElementById('mirrorNextBtn').style.display = 'none';
+          document.getElementById('mirrorCompleteBtn').style.display = 'inline-block';
+          
+          // Copy mirrored settings to step 2
+          document.getElementById('mirrorDevice2').textContent = document.getElementById('mirrorDevice').textContent;
+          document.getElementById('mirrorPlan2').textContent = document.getElementById('mirrorPlan').textContent;
+          document.getElementById('mirrorProtection2').textContent = document.getElementById('mirrorProtection').textContent;
+          
+          // Auto-generate line name
+          const existingLines = document.querySelectorAll('#lineToMirrorSelect option');
+          const newLineNumber = existingLines.length + 1; // Add 1 to get the next line number
+          document.getElementById('newLineName').value = `Line ${newLineNumber}`;
+        }
+      });
+
+      // Handle Back button in mirror modal
+      document.getElementById('mirrorBackBtn').addEventListener('click', function() {
+        if (mirrorCurrentStep === 2) {
+          // Move back to step 1
+          mirrorCurrentStep = 1;
+          document.getElementById('mirrorStep1').style.display = 'block';
+          document.getElementById('mirrorStep2').style.display = 'none';
+          document.getElementById('mirrorBackBtn').style.display = 'none';
+          document.getElementById('mirrorNextBtn').style.display = 'inline-block';
+          document.getElementById('mirrorCompleteBtn').style.display = 'none';
+        }
+      });
+
+      // Handle Complete button in mirror modal
+      document.getElementById('mirrorCompleteBtn').addEventListener('click', async function() {
+        const employeeName = document.getElementById('newEmployeeName').value.trim();
+        const lineName = document.getElementById('newLineName').value.trim();
+        
+        if (!employeeName) {
+          alert('Please enter an employee name.');
+          return;
+        }
+        
+        if (!selectedLineToMirror) {
+          alert('Please select a line to mirror.');
+          return;
+        }
+        
+        // Disable button and show loading state
+        const completeBtn = this;
+        const originalText = completeBtn.textContent;
+        completeBtn.disabled = true;
+        completeBtn.textContent = 'Creating...';
+        
+        try {
+          // Make API call to create the mirrored line
+          const response = await fetch('/api/lines/mirror/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              account_id: currentAccountId,
+              line_to_mirror_id: selectedLineToMirror.id,
+              new_employee_name: employeeName,
+              new_line_name: lineName
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('mirrorLineModal'));
+            modal.hide();
+            
+            // Show success message
+            showComingSoonModal(
+              'Line Mirrored Successfully!', 
+              `Your new line "${data.line.line_name}" for ${data.line.employee_name} has been created with the same settings as ${data.line.mirrored_from.line_name}.`
+            );
+            
+            // Refresh the page to show the new line
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            alert(`Error: ${data.error || 'Failed to create mirrored line'}`);
+          }
+        } catch (error) {
+          console.error('Error creating mirrored line:', error);
+          alert('Error: Failed to create mirrored line. Please try again.');
+        } finally {
+          // Re-enable button
+          completeBtn.disabled = false;
+          completeBtn.textContent = originalText;
+        }
+      });
       document.getElementById('upgradeBtn').addEventListener('click', function() {
         showComingSoonModal('Upgrade', 'This feature is coming soon.');
       });
@@ -2384,6 +2733,23 @@
                         conversationHistory.push({ role: 'system', content: data.tool_result });
                     }
                     
+                    // Handle modal triggers
+                    if (data.trigger_modal === 'add_line') {
+                        // Close chatbot and open Add Line modal
+                        setTimeout(() => {
+                            chatbotOpen = false;
+                            chatbotContainer.style.display = 'none';
+                            openAddLineModal();
+                        }, 1000);
+                    } else if (data.trigger_modal === 'mirror_line') {
+                        // Close chatbot and open Mirror Line modal
+                        setTimeout(() => {
+                            chatbotOpen = false;
+                            chatbotContainer.style.display = 'none';
+                            openMirrorLineModal(data.line_to_mirror_data);
+                        }, 1000);
+                    }
+                    
                     // Keep chat open - don't refresh page automatically
                     // Only refresh if explicitly needed
                     if (data.refresh_needed) {
@@ -2973,11 +3339,11 @@
         document.getElementById('tradeInModel').addEventListener('input', updateModalButtons);
         document.getElementById('tradeInCondition').addEventListener('change', updateModalButtons);
 
-        // Edit Payment Date Functions
+        // Edit Line Details Functions
         function editLinePaymentDate(lineId, lineName, employeeName, currentDate) {
             currentEditingLineId = lineId;
             document.getElementById('editLineName').textContent = lineName;
-            document.getElementById('editEmployeeName').textContent = employeeName;
+            document.getElementById('editEmployeeName').value = employeeName;
             document.getElementById('editPaymentDate').value = currentDate;
             
             const modal = new bootstrap.Modal(document.getElementById('editPaymentDateModal'));
@@ -2985,7 +3351,13 @@
         }
 
         document.getElementById('savePaymentDateBtn').addEventListener('click', async function() {
+            const employeeName = document.getElementById('editEmployeeName').value.trim();
             const paymentDate = document.getElementById('editPaymentDate').value;
+            
+            if (!employeeName) {
+                alert('Please enter an employee name');
+                return;
+            }
             
             if (!paymentDate) {
                 alert('Please select a payment due date');
@@ -2997,13 +3369,14 @@
             saveBtn.textContent = 'Saving...';
             
             try {
-                const response = await fetch('/api/lines/update-payment-date/', {
+                const response = await fetch('/api/lines/update-details/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         line_id: currentEditingLineId,
+                        employee_name: employeeName,
                         payment_date: paymentDate
                     })
                 });
@@ -3016,16 +3389,16 @@
                     modal.hide();
                     
                     // Show success message
-                    alert('Payment due date updated successfully!');
+                    alert('Line details updated successfully!');
                     
                     // Refresh the page to show updated data
                     window.location.reload();
                 } else {
-                    alert(`Error: ${data.error || 'Failed to update payment date'}`);
+                    alert(`Error: ${data.error || 'Failed to update line details'}`);
                 }
             } catch (error) {
-                console.error('Error updating payment date:', error);
-                alert('Error: Failed to update payment date. Please try again.');
+                console.error('Error updating line details:', error);
+                alert('Error: Failed to update line details. Please try again.');
             }
             
             // Re-enable button
