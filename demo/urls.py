@@ -24,7 +24,7 @@ from demo_app.views import (
     get_services, add_service_to_lines, get_line_services, get_account_lines,
     suspend_lines, restore_lines, chatbot_message, create_line, update_account_status,
     add_line_account_selection, update_line_payment_date, update_line_details, create_mirrored_line,
-    get_line_details
+    get_line_details, logo_test
 )
 
 urlpatterns = [
@@ -53,10 +53,11 @@ urlpatterns = [
     path('api/lines/update-details/', update_line_details, name='update_line_details'),
     path('api/chatbot/message/', chatbot_message, name='chatbot_message'),
     path('api/accounts/update-status/', update_account_status, name='update_account_status'),
+    path('logo-test/', logo_test, name='logo_test'),
 ]
 # Serve static files in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 else:
-    # In production, serve static files from STATICFILES_DIRS
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    # In production, serve static files from STATIC_ROOT
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

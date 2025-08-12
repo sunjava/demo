@@ -16,7 +16,7 @@ from .chatbot import chatbot
 
 # Create your views here.
 
-# @login_required  # removed for demo
+@login_required
 def hello_world(request):
     """Dashboard view with real account data"""
     # Get recently viewed accounts from session
@@ -61,6 +61,7 @@ def hello_world(request):
     }
     return render(request, 'dashboard.html', context)
 
+@login_required
 def all_accounts(request):
     """Display all accounts in a list format"""
     accounts = Account.objects.all().order_by('-last_modified_on')
@@ -78,6 +79,7 @@ def all_accounts(request):
     }
     return render(request, 'demo_app/all_accounts.html', context)
 
+@login_required
 def all_lines(request):
     """Display all lines across all accounts grouped by account and sorted by created date"""
     # Get accounts with their lines, ordered by account last modified date (newest first)
@@ -124,6 +126,7 @@ def all_lines(request):
     }
     return render(request, 'demo_app/all_lines.html', context)
 
+@login_required
 def account_details(request, account_id):
     """Display account details with lines loaded from database"""
     account = get_object_or_404(Account, id=account_id)
@@ -186,6 +189,7 @@ def signup_view(request):
 
 # API Views for Service Management
 
+@login_required
 @require_http_methods(["GET"])
 def get_services(request):
     """Get all available services"""
@@ -207,6 +211,7 @@ def get_services(request):
     return JsonResponse({'services': services_data})
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def add_service_to_lines(request):
@@ -291,6 +296,7 @@ def add_service_to_lines(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@login_required
 @require_http_methods(["GET"])
 def get_line_services(request, line_id):
     """Get all services for a specific line"""
@@ -319,6 +325,7 @@ def get_line_services(request, line_id):
     })
 
 
+@login_required
 @require_http_methods(["GET"])
 def get_account_lines(request, account_id):
     """Get all lines for an account with their current services"""
@@ -362,6 +369,7 @@ def get_account_lines(request, account_id):
     })
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def suspend_lines(request):
@@ -403,6 +411,7 @@ def suspend_lines(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def restore_lines(request):
@@ -444,6 +453,7 @@ def restore_lines(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def create_line(request):
@@ -541,6 +551,7 @@ def create_line(request):
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_line_details(request, line_id):
@@ -575,6 +586,7 @@ def get_line_details(request, line_id):
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def create_mirrored_line(request):
@@ -681,6 +693,7 @@ def create_mirrored_line(request):
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_account_status(request):
@@ -736,6 +749,7 @@ def update_account_status(request):
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def chatbot_message(request):
@@ -774,6 +788,7 @@ def chatbot_message(request):
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_line_details(request):
@@ -826,6 +841,7 @@ def update_line_details(request):
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_line_payment_date(request):
@@ -874,6 +890,7 @@ def update_line_payment_date(request):
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
 
 
+@login_required
 def add_line_account_selection(request):
     """Display account selection page for Add A Line flow"""
     # Get all active accounts
@@ -891,3 +908,16 @@ def add_line_account_selection(request):
         'total_accounts': accounts.count(),
     }
     return render(request, 'demo_app/add_line_account_selection.html', context)
+
+
+@login_required
+def logo_test(request):
+    """Test page to verify logo visibility"""
+    from django.conf import settings
+    
+    context = {
+        'debug': settings.DEBUG,
+        'static_url': settings.STATIC_URL,
+        'static_root': settings.STATIC_ROOT,
+    }
+    return render(request, 'logo_test.html', context)

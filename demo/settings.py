@@ -162,5 +162,9 @@ CSRF_TRUSTED_ORIGINS = [
 
 LOGIN_URL = '/login/'
 
+# Authentication Settings
+# All pages now require authentication except login, logout, and signup
+# The @login_required decorator has been added to all views in demo_app/views.py
+
 # OpenAI Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
