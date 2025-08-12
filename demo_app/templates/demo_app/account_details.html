@@ -14,7 +14,7 @@
         }
         body { background: #f5f5f7; color: #222; }
         .tmobile-header { background: #fff; color: var(--tmobile-magenta); padding: 1.5rem 0 1rem 0; border-bottom: 2px solid #eee; }
-        .tmobile-logo { height: 40px; margin-right: 1rem; }
+        .tmobile-logo { height: 40px; width: auto; max-width: 120px; margin-right: 1rem; }
         .tmobile-title { font-size: 2rem; font-weight: bold; color: var(--tmobile-magenta); margin-bottom: 0; }
         .add-line-btn { background: var(--tmobile-magenta); color: #fff; font-weight: 600; border-radius: 2rem; border: none; padding: 0.5rem 2rem; }
         .add-line-btn:hover { background: #b8005a; color: #fff; }
@@ -671,7 +671,8 @@
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
                 <a href="/dashboard/" class="d-flex align-items-center text-decoration-none">
-                    <img src="{% static 'logo.svg' %}" alt="T-Mobile Logo" class="tmobile-logo">
+                    <img src="{% static 'logo.svg' %}" alt="T-Mobile Logo" class="tmobile-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                    <span class="tmobile-text-logo" style="display: none; font-size: 1.5rem; font-weight: bold; color: #E20074; margin-right: 1rem;">T-Mobile</span>
                     <span class="tmobile-title">ABC Limited</span>
                 </a>
             </div>

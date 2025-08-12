@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f7;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .logo-test {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .logo-test img {
+            display: block;
+            margin: 10px 0;
+        }
+        .logo-svg {
+            height: 40px;
+            width: auto;
+            max-width: 120px;
+        }
+        .logo-png {
+            height: 40px;
+            width: auto;
+            max-width: 120px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Logo Test Page</h1>
+        
+        <div class="logo-test">
+            <h3>SVG Logo Test</h3>
+            <p>Static URL: {% static 'logo.svg' %}</p>
+            <img src="{% static 'logo.svg' %}" alt="T-Mobile Logo SVG" class="logo-svg">
+            <p class="success">✓ SVG logo should be visible above</p>
+        </div>
+        
+        <div class="logo-test">
+            <h3>PNG Logo Test</h3>
+            <p>Static URL: {% static 'logo.png' %}</p>
+            <img src="{% static 'logo.png' %}" alt="T-Mobile Logo PNG" class="logo-png">
+            <p class="success">✓ PNG logo should be visible above</p>
+        </div>
+        
+        <div class="logo-test">
+            <h3>Debug Information</h3>
+            <p><strong>DEBUG:</strong> {{ debug }}</p>
+            <p><strong>STATIC_URL:</strong> {{ static_url }}</p>
+            <p><strong>STATIC_ROOT:</strong> {{ static_root }}</p>
+        </div>
+        
+        <div class="logo-test">
+            <h3>Direct File Test</h3>
+            <p>Testing direct file access:</p>
+            <img src="/static/logo.svg" alt="Direct SVG" class="logo-svg">
+            <img src="/static/logo.png" alt="Direct PNG" class="logo-png">
+        </div>
+    </div>
+</body>
+</html> 
