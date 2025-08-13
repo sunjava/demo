@@ -160,11 +160,20 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        
+        # Debug logging
+        print(f"DEBUG: Login attempt - Username: '{username}', Password: '{password}'")
+        print(f"DEBUG: Password length: {len(password) if password else 0}")
+        print(f"DEBUG: POST data keys: {list(request.POST.keys())}")
+        print(f"DEBUG: Raw POST data: {request.POST}")
+        
         user = authenticate(request, username=username, password=password)
         if user is not None:
+            print(f"DEBUG: Authentication successful for user: {user.username}")
             login(request, user)
             return redirect('dashboard')
         else:
+            print(f"DEBUG: Authentication failed for username: {username}")
             return render(request, 'demo_app/login.html', {'error': 'Invalid username or password'})
     return render(request, 'demo_app/login.html')
 
