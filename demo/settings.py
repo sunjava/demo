@@ -168,3 +168,30 @@ LOGIN_URL = '/login/'
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
+# Production Settings for Railway
+if not DEBUG:
+    # Security settings for production
+    SECURE_SSL_REDIRECT = False  # Railway handles SSL
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+    # Session settings for production
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
+    # CSRF settings for production
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = False  # Must be False for AJAX
+    CSRF_TRUSTED_ORIGINS = [
+        'https://*.railway.app',
+        'https://*.up.railway.app',
+        'https://*.ngrok.io',
+        'https://*.ngrok-free.app',
+    ]
+    
+    # Database connection settings
+    DATABASES['default']['CONN_MAX_AGE'] = 600
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+    }
