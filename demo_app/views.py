@@ -156,6 +156,7 @@ def account_details(request, account_id):
     }
     return render(request, 'demo_app/account_details.html', context)
 
+@csrf_exempt
 def login_view(request):
     if request.method == 'POST':
         # Enhanced debug logging
