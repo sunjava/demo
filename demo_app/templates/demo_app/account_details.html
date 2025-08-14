@@ -664,6 +664,38 @@
             font-size: 0.875rem;
             margin-top: 0.25rem;
         }
+        
+        /* Upgrade Modal Styles */
+        .upgrade-option {
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .upgrade-option:hover {
+            border-color: var(--tmobile-magenta);
+            background: var(--tmobile-magenta-light);
+        }
+        
+        .upgrade-option .form-check-input:checked + .form-check-label {
+            color: var(--tmobile-magenta);
+        }
+        
+        .upgrade-option .form-check-input:checked ~ .upgrade-option {
+            border-color: var(--tmobile-magenta);
+            background: var(--tmobile-magenta-light);
+        }
+        
+        .upgrade-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .upgrade-description {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -846,7 +878,11 @@
                                     <td>{{ line.payment_due_date|date:"d M Y"|default:"N/A" }}</td>
                                     <td><span class="account-attr-value">{{ line.get_status_display }}</span></td>
                                     <td>
-                                        <button class="btn btn-outline-primary btn-sm" onclick="editLinePaymentDate({{ line.id }}, '{{ line.line_name }}', '{{ line.employee_name }}', '{{ line.payment_due_date|date:"Y-m-d"|default:"" }}')">
+                                        <button class="btn btn-outline-primary btn-sm edit-line-btn" 
+                                                data-line-id="{{ line.id }}" 
+                                                data-line-name="{{ line.line_name }}" 
+                                                data-employee-name="{{ line.employee_name }}" 
+                                                data-payment-date="{{ line.payment_due_date|date:'Y-m-d'|default:'' }}">
                                             <i class="bi bi-pencil"></i> Edit Details
                                         </button>
                                     </td>
@@ -1122,6 +1158,385 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" id="mirrorNextBtn">Next</button>
             <button type="button" class="btn btn-success" id="mirrorCompleteBtn" style="display: none;">Complete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upgrade Lines Modal -->
+    <div class="modal fade" id="upgradeModal" tabindex="-1" aria-labelledby="upgradeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+          <div class="modal-header" style="background: var(--tmobile-magenta); color: white;">
+            <h5 class="modal-title" id="upgradeModalLabel">Upgrade Lines</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Progress Bar -->
+            <div class="progress-container mb-4">
+              <div class="progress-steps d-flex justify-content-between align-items-center">
+                <div class="progress-step active" data-step="1">
+                  <div class="step-circle">1</div>
+                  <div class="step-label">Select Lines</div>
+                </div>
+                <div class="progress-step" data-step="2">
+                  <div class="step-circle">2</div>
+                  <div class="step-label">Upgrade Type</div>
+                </div>
+                <div class="progress-step" data-step="3">
+                  <div class="step-circle">3</div>
+                  <div class="step-label">New Device</div>
+                </div>
+                <div class="progress-step" data-step="4">
+                  <div class="step-circle">4</div>
+                  <div class="step-label">New Plan</div>
+                </div>
+                <div class="progress-step" data-step="5">
+                  <div class="step-circle">5</div>
+                  <div class="step-label">Summary</div>
+                </div>
+                <div class="progress-step" data-step="6">
+                  <div class="step-circle">6</div>
+                  <div class="step-label">Checkout</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step Content -->
+            <div id="upgradeStepContent">
+              <!-- Step 1: Select Lines -->
+              <div class="step-content active" id="upgradeStep1">
+                <h6 class="mb-4">Select Lines to Upgrade</h6>
+                <p class="text-muted mb-4">Choose which lines you want to upgrade. You can upgrade multiple lines at once.</p>
+                
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th><input type="checkbox" id="upgradeSelectAll" class="form-check-input"></th>
+                        <th>Line Name</th>
+                        <th>Employee</th>
+                        <th>Current Device</th>
+                        <th>Current Plan</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="upgradeLinesTableBody">
+                      <!-- Lines will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                  <strong>Selected Lines:</strong> <span id="upgradeSelectedCount">0</span>
+                </div>
+              </div>
+
+              <!-- Step 2: Upgrade Type -->
+              <div class="step-content" id="upgradeStep2">
+                <h6 class="mb-4">Choose Upgrade Type</h6>
+                <p class="text-muted mb-4">Select what type of upgrade you want for the selected lines.</p>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-check upgrade-option mb-4">
+                      <input class="form-check-input" type="radio" name="upgradeType" id="deviceUpgrade" value="device" checked>
+                      <label class="form-check-label" for="deviceUpgrade">
+                        <div class="upgrade-name">Device Upgrade</div>
+                        <div class="upgrade-description">Upgrade to a newer device with same plan</div>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check upgrade-option mb-4">
+                      <input class="form-check-input" type="radio" name="upgradeType" id="planUpgrade" value="plan">
+                      <label class="form-check-label" for="planUpgrade">
+                        <div class="upgrade-name">Plan Upgrade</div>
+                        <div class="upgrade-description">Upgrade to a better plan with same device</div>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check upgrade-option mb-4">
+                      <input class="form-check-input" type="radio" name="upgradeType" id="fullUpgrade" value="full">
+                      <label class="form-check-label" for="fullUpgrade">
+                        <div class="upgrade-name">Full Upgrade</div>
+                        <div class="upgrade-description">Upgrade both device and plan</div>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check upgrade-option mb-4">
+                      <input class="form-check-input" type="radio" name="upgradeType" id="protectionUpgrade" value="protection">
+                      <label class="form-check-label" for="protectionUpgrade">
+                        <div class="upgrade-name">Protection Upgrade</div>
+                        <div class="upgrade-description">Add or upgrade device protection</div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3: New Device (if applicable) -->
+              <div class="step-content" id="upgradeStep3">
+                <h6 class="mb-4">Select New Device</h6>
+                <p class="text-muted mb-4">Choose the new device for your upgrade.</p>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Device Type</label>
+                      <select class="form-select" id="upgradeDeviceType">
+                        <option value="">Choose device type...</option>
+                        <option value="iphone">iPhone</option>
+                        <option value="samsung">Samsung</option>
+                        <option value="google">Google Pixel</option>
+                        <option value="motorola">Motorola</option>
+                        <option value="lg">LG</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Device Model</label>
+                      <select class="form-select" id="upgradeDeviceModel" disabled>
+                        <option value="">Select device type first...</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Color</label>
+                      <select class="form-select" id="upgradeDeviceColor" disabled>
+                        <option value="">Select model first...</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Storage</label>
+                      <select class="form-select" id="upgradeDeviceStorage" disabled>
+                        <option value="">Select model first...</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group mb-3">
+                      <label class="form-label">Quantity</label>
+                      <select class="form-select" id="upgradeDeviceQuantity">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div id="upgradeDeviceDetails" class="mt-3" style="display: none;">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="row align-items-center">
+                        <div class="col-md-3">
+                          <img id="upgradeDeviceImage" src="" alt="Device" class="img-fluid" style="max-height: 100px;">
+                        </div>
+                        <div class="col-md-9">
+                          <h6 id="upgradeDeviceTitle">Device Details</h6>
+                          <p id="upgradeDeviceDescription" class="text-muted mb-2"></p>
+                          <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">MSRP:</span>
+                            <span class="h6 mb-0" id="upgradeDeviceMSRP">$0</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 4: New Plan (if applicable) -->
+              <div class="step-content" id="upgradeStep4">
+                <h6 class="mb-4">Select New Plan</h6>
+                <p class="text-muted mb-4">Choose the new plan for your upgrade.</p>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6 class="mb-3">Business Plans</h6>
+                    <div class="plan-options">
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="upgradePlanOption" id="upgradePlan1" value="business_individual_20">
+                        <label class="form-check-label" for="upgradePlan1">
+                          <div class="plan-name">Business Individual Value Unlimited Talk & Text</div>
+                          <div class="plan-price">$20.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="upgradePlanOption" id="upgradePlan2" value="one_plan_tfb_25">
+                        <label class="form-check-label" for="upgradePlan2">
+                          <div class="plan-name">ONE Plan TFB TE</div>
+                          <div class="plan-price">$25.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="upgradePlanOption" id="upgradePlan3" value="one_plan_voice_tablet_35">
+                        <label class="form-check-label" for="upgradePlan3">
+                          <div class="plan-name">One Plan Voice and Tablet For Enterprise</div>
+                          <div class="plan-price">$35.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <h6 class="mb-3">Premium Plans</h6>
+                    <div class="plan-options">
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="upgradePlanOption" id="upgradePlan4" value="business_individual_60">
+                        <label class="form-check-label" for="upgradePlan4">
+                          <div class="plan-name">Business Individual Value Unlimited Talk & Text</div>
+                          <div class="plan-price">$60.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="upgradePlanOption" id="upgradePlan5" value="one_plan_tfb_65">
+                        <label class="form-check-label" for="upgradePlan5">
+                          <div class="plan-name">ONE Plan TFB TE</div>
+                          <div class="plan-price">$65.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                      <div class="form-check plan-option mb-3">
+                        <input class="form-check-input" type="radio" name="upgradePlanOption" id="upgradePlan6" value="one_plan_voice_tablet_75">
+                        <label class="form-check-label" for="upgradePlan6">
+                          <div class="plan-name">One Plan Voice and Tablet For Enterprise</div>
+                          <div class="plan-price">$75.00/mo.</div>
+                          <a href="#" class="plan-details-link">View plan details</a>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 5: Summary -->
+              <div class="step-content" id="upgradeStep5">
+                <h6 class="mb-4">Upgrade Summary</h6>
+                <div class="summary-container">
+                  <div class="row">
+                    <div class="col-md-8">
+                      <div class="card mb-3">
+                        <div class="card-body">
+                          <h6 class="card-title">Lines to Upgrade</h6>
+                          <div id="upgradeSummaryLines">
+                            <!-- Selected lines will be shown here -->
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="card mb-3">
+                        <div class="card-body">
+                          <h6 class="card-title">Upgrade Details</h6>
+                          <div id="upgradeSummaryDetails">
+                            <!-- Upgrade details will be shown here -->
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card bg-light">
+                        <div class="card-body">
+                          <h6 class="card-title">Pricing Summary</h6>
+                          <hr>
+                          <div class="d-flex justify-content-between mb-2">
+                            <span>Device (24 mo.):</span>
+                            <span id="upgradeSummaryDeviceMonthly">$0.00/mo.</span>
+                          </div>
+                          <div class="d-flex justify-content-between mb-2">
+                            <span>Plan Change:</span>
+                            <span id="upgradeSummaryPlanChange">$0.00/mo.</span>
+                          </div>
+                          <hr>
+                          <div class="d-flex justify-content-between mb-2">
+                            <strong>Total Monthly Change:</strong>
+                            <strong class="text-primary" id="upgradeSummaryTotalChange">$0.00/mo.</strong>
+                          </div>
+                          <div class="d-flex justify-content-between mb-2">
+                            <span>Due Now:</span>
+                            <span id="upgradeSummaryDueNow">$0.00</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 6: Checkout -->
+              <div class="step-content" id="upgradeStep6">
+                <h6 class="mb-4">Complete Upgrade</h6>
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="card mb-4">
+                      <div class="card-body">
+                        <h6 class="card-title mb-3">Upgrade Summary</h6>
+                        <div id="upgradeCheckoutSummary">
+                          <!-- Checkout summary will be populated here -->
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card">
+                      <div class="card-body">
+                        <h6 class="card-title mb-3">Payment Method</h6>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="upgradePaymentMethod" id="upgradeCreditCard" checked>
+                          <label class="form-check-label" for="upgradeCreditCard">
+                            <strong>Credit Card ending in 1234</strong>
+                            <div class="text-muted small">Visa •••• 1234</div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card bg-light">
+                      <div class="card-body">
+                        <h6 class="card-title">Billing Summary</h6>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                          <span>Subtotal:</span>
+                          <span id="upgradeCheckoutSubtotal">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                          <span>Taxes & Fees:</span>
+                          <span id="upgradeCheckoutTaxes">$0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                          <strong>Total:</strong>
+                          <strong class="text-primary" id="upgradeCheckoutTotal">$0.00</strong>
+                        </div>
+                        <div class="text-muted small">
+                          <p class="mb-2">• Upgrade will be processed immediately</p>
+                          <p class="mb-2">• New devices will be shipped within 2-3 business days</p>
+                          <p class="mb-0">• You will receive confirmation via SMS and email</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="upgradePrevBtn" style="display: none;">Back</button>
+            <button type="button" class="btn btn-primary" id="upgradeNextBtn">Next</button>
+            <button type="button" class="btn btn-success" id="upgradeCompleteBtn" style="display: none;">Complete Upgrade</button>
           </div>
         </div>
       </div>
@@ -1651,11 +2066,12 @@
                 Welcome! I can help you manage your lines and services. Try commands like:
             </div>
             <div class="chatbot-suggestions">
-                <span class="suggestion-chip" data-suggestion="Add 10 day pass to all lines">Add service to all lines</span>
-                <span class="suggestion-chip" data-suggestion="Suspend John Smith's line">Suspend a line</span>
+                <span class="suggestion-chip" data-suggestion="Add a service to lines">Add service to all lines</span>
+                <span class="suggestion-chip" data-suggestion="Suspend a line">Suspend a line</span>
                 <span class="suggestion-chip" data-suggestion="Restore all suspended lines">Restore lines</span>
                 <span class="suggestion-chip" data-suggestion="Add a new line to this account">Add A Line</span>
                 <span class="suggestion-chip" data-suggestion="Mirror an existing line">Mirror a Line</span>
+                <span class="suggestion-chip" data-suggestion="Upgrade existing lines">Upgrade Lines</span>
             </div>
         </div>
         <div class="chatbot-input-area">
@@ -1742,39 +2158,100 @@
         'protection_360': { name: 'Protection 360 Tier S TE', price: 18.00 }
       };
 
-      document.getElementById('addLineBtn').addEventListener('click', function() {
-        openAddLineModal();
-      });
-      
-      // Function to open Add Line modal (can be called from button or URL parameter)
-      function openAddLineModal() {
-        // Reset modal state
-        currentStep = 1;
-        orderData = {
-          device: {},
-          plan: {},
-          protection: {},
-          tradeIn: {},
-          summary: {}
-        };
+              document.getElementById('addLineBtn').addEventListener('click', function() {
+          console.log('Add Line button clicked');
+          openAddLineModal();
+        });
         
-        // Reset form fields
-        resetModalForm();
-        
-        // Show modal
-        var modalElement = document.getElementById('addLineModal');
-        
-        if (modalElement) {
-          var modal = new bootstrap.Modal(modalElement);
-          modal.show();
+        // Debug: Check if elements exist when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+          console.log('Page loaded, checking elements...');
+          console.log('Add Line button:', document.getElementById('addLineBtn'));
+          console.log('Add Line modal:', document.getElementById('addLineModal'));
+          console.log('Device type select:', document.getElementById('deviceType'));
+          console.log('Device model select:', document.getElementById('deviceModel'));
+          console.log('Device color select:', document.getElementById('deviceColor'));
+          console.log('Device storage select:', document.getElementById('deviceStorage'));
+          console.log('Device data available:', deviceData);
+          console.log('Plan data available:', planData);
+          console.log('Protection data available:', protectionData);
+          console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
+          console.log('Bootstrap Modal available:', typeof bootstrap !== 'undefined' && typeof bootstrap.Modal !== 'undefined');
+        });
+
+        // Test function for Add Line modal dropdowns
+        window.testAddLineDropdowns = function() {
+          console.log('=== Testing Add Line Dropdowns ===');
+          console.log('Device data:', deviceData);
+          console.log('Plan data:', planData);
+          console.log('Protection data:', protectionData);
           
-          // Update progress and buttons after modal is shown
-          setTimeout(() => {
-            updateProgress();
-            updateModalButtons();
-          }, 100);
+          // Test populating dropdowns
+          populateModalDropdowns();
+          
+          console.log('Dropdown population test completed');
+        };
+
+        // Test function to check if data is available
+        window.checkAddLineData = function() {
+          console.log('=== Checking Add Line Data ===');
+          console.log('deviceData available:', typeof deviceData !== 'undefined');
+          console.log('deviceData keys:', deviceData ? Object.keys(deviceData) : 'undefined');
+          console.log('planData available:', typeof planData !== 'undefined');
+          console.log('planData keys:', planData ? Object.keys(planData) : 'undefined');
+          console.log('protectionData available:', typeof protectionData !== 'undefined');
+          console.log('protectionData keys:', protectionData ? Object.keys(protectionData) : 'undefined');
+          
+          // Check if elements exist
+          console.log('deviceType element:', document.getElementById('deviceType'));
+          console.log('deviceModel element:', document.getElementById('deviceModel'));
+          console.log('deviceColor element:', document.getElementById('deviceColor'));
+          console.log('deviceStorage element:', document.getElementById('deviceStorage'));
+        };
+      
+              // Function to open Add Line modal (can be called from button or URL parameter)
+        function openAddLineModal() {
+          console.log('Opening Add Line modal...');
+          
+          // Reset modal state
+          currentStep = 1;
+          orderData = {
+            device: {},
+            plan: {},
+            protection: {},
+            tradeIn: {},
+            summary: {}
+          };
+          
+          // Reset form fields
+          resetModalForm();
+          
+          // Show modal
+          var modalElement = document.getElementById('addLineModal');
+          console.log('Modal element:', modalElement);
+          
+          if (modalElement) {
+            var modal = new bootstrap.Modal(modalElement);
+            console.log('Bootstrap modal instance:', modal);
+            modal.show();
+            
+            // Populate dropdowns and update UI after modal opens
+            setTimeout(() => {
+              console.log('Modal opened, populating dropdowns...');
+              
+              // Populate all dropdowns with data
+              populateModalDropdowns();
+              
+              // Update progress and buttons
+              updateProgress();
+              updateModalButtons();
+              
+              console.log('Modal initialization complete');
+            }, 100);
+                    } else {
+            console.error('Modal element not found!');
+          }
         }
-      }
       
       // Check for URL parameters and handle accordingly
       const urlParams = new URLSearchParams(window.location.search);
@@ -2048,7 +2525,12 @@
         }
       });
       document.getElementById('upgradeBtn').addEventListener('click', function() {
-        showComingSoonModal('Upgrade', 'This feature is coming soon.');
+        const selectedLines = getSelectedLines();
+        if (selectedLines.length === 0) {
+          alert('Please select at least one line to upgrade.');
+          return;
+        }
+        openUpgradeModal();
       });
       const addServicesBtn = document.getElementById('addServicesBtn');
       if (addServicesBtn) {
@@ -2749,6 +3231,20 @@
                             chatbotContainer.style.display = 'none';
                             openMirrorLineModal(data.line_to_mirror_data);
                         }, 1000);
+                    } else if (data.trigger_modal === 'add_service') {
+                        // Close chatbot and open Add Service modal
+                        setTimeout(() => {
+                            chatbotOpen = false;
+                            chatbotContainer.style.display = 'none';
+                            openAddServiceModal();
+                        }, 1000);
+                    } else if (data.trigger_modal === 'upgrade_line') {
+                        // Close chatbot and open Upgrade Line modal
+                        setTimeout(() => {
+                            chatbotOpen = false;
+                            chatbotContainer.style.display = 'none';
+                            openUpgradeModal();
+                        }, 1000);
                     }
                     
                     // Keep chat open - don't refresh page automatically
@@ -2814,8 +3310,493 @@
             }, 10000);
         }
 
+        // Upgrade Modal Functionality
+        let upgradeCurrentStep = 1;
+        let upgradeData = {
+          selectedLines: [],
+          upgradeType: 'device',
+          device: {},
+          plan: {},
+          summary: {}
+        };
+
+        // Function to open Upgrade modal
+        function openUpgradeModal() {
+          // Reset modal state
+          upgradeCurrentStep = 1;
+          upgradeData = {
+            selectedLines: [],
+            upgradeType: 'device',
+            device: {},
+            plan: {},
+            summary: {}
+          };
+          
+          // Reset form fields
+          resetUpgradeModalForm();
+          
+          // Populate lines table
+          populateUpgradeLinesTable();
+          
+          // Show modal
+          var modalElement = document.getElementById('upgradeModal');
+          if (modalElement) {
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            
+            // Update progress and buttons after modal is shown
+            setTimeout(() => {
+              updateUpgradeProgress();
+              updateUpgradeModalButtons();
+            }, 100);
+          }
+        }
+
+        // Function to reset upgrade modal form
+        function resetUpgradeModalForm() {
+          // Reset all form fields
+          document.getElementById('upgradeDeviceType').value = '';
+          document.getElementById('upgradeDeviceModel').value = '';
+          document.getElementById('upgradeDeviceColor').value = '';
+          document.getElementById('upgradeDeviceStorage').value = '';
+          document.getElementById('upgradeDeviceQuantity').value = '1';
+          
+          // Disable dependent fields
+          document.getElementById('upgradeDeviceModel').disabled = true;
+          document.getElementById('upgradeDeviceColor').disabled = true;
+          document.getElementById('upgradeDeviceStorage').disabled = true;
+          
+          // Hide device details
+          document.getElementById('upgradeDeviceDetails').style.display = 'none';
+          
+          // Reset plan selection
+          document.querySelectorAll('input[name="upgradePlanOption"]').forEach(radio => {
+            radio.checked = false;
+          });
+          
+          // Reset upgrade type selection
+          document.getElementById('deviceUpgrade').checked = true;
+        }
+
+        // Function to populate upgrade lines table
+        function populateUpgradeLinesTable() {
+          const tableBody = document.getElementById('upgradeLinesTableBody');
+          const selectedLines = getSelectedLines();
+          
+          tableBody.innerHTML = '';
+          
+          selectedLines.forEach(line => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><input type="checkbox" class="form-check-input upgrade-line-checkbox" value="${line.id}" data-line-name="${line.name}" data-msdn="${line.msdn}"></td>
+              <td>${line.name}</td>
+              <td>${line.name.split(' ')[0]}</td>
+              <td>Current Device</td>
+              <td>Current Plan</td>
+              <td><span class="badge bg-success">Active</span></td>
+            `;
+            tableBody.appendChild(row);
+          });
+          
+          // Update selected count
+          updateUpgradeSelectedCount();
+          
+          // Add event listeners to checkboxes
+          document.querySelectorAll('.upgrade-line-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateUpgradeSelectedCount);
+          });
+          
+          // Add event listener to select all checkbox
+          document.getElementById('upgradeSelectAll').addEventListener('change', function() {
+            const isChecked = this.checked;
+            document.querySelectorAll('.upgrade-line-checkbox').forEach(checkbox => {
+              checkbox.checked = isChecked;
+            });
+            updateUpgradeSelectedCount();
+          });
+        }
+
+        // Function to update upgrade selected count
+        function updateUpgradeSelectedCount() {
+          const selectedCheckboxes = document.querySelectorAll('.upgrade-line-checkbox:checked');
+          const count = selectedCheckboxes.length;
+          document.getElementById('upgradeSelectedCount').textContent = count;
+          
+          // Update upgrade data
+          upgradeData.selectedLines = Array.from(selectedCheckboxes).map(checkbox => ({
+            id: parseInt(checkbox.value),
+            name: checkbox.dataset.lineName,
+            msdn: checkbox.dataset.msdn
+          }));
+          
+          // Enable/disable next button
+          updateUpgradeModalButtons();
+        }
+
+        // Function to update upgrade progress
+        function updateUpgradeProgress() {
+          // Update progress steps
+          document.querySelectorAll('#upgradeModal .progress-step').forEach((step, index) => {
+            const stepNumber = index + 1;
+            step.classList.remove('active', 'completed');
+            
+            if (stepNumber < upgradeCurrentStep) {
+              step.classList.add('completed');
+            } else if (stepNumber === upgradeCurrentStep) {
+              step.classList.add('active');
+            }
+          });
+          
+          // Show current step content
+          document.querySelectorAll('#upgradeModal .step-content').forEach((content, index) => {
+            content.classList.remove('active');
+            if (index + 1 === upgradeCurrentStep) {
+              content.classList.add('active');
+            }
+          });
+        }
+
+        // Function to update upgrade modal buttons
+        function updateUpgradeModalButtons() {
+          const prevBtn = document.getElementById('upgradePrevBtn');
+          const nextBtn = document.getElementById('upgradeNextBtn');
+          const completeBtn = document.getElementById('upgradeCompleteBtn');
+          
+          // Show/hide buttons based on current step
+          prevBtn.style.display = upgradeCurrentStep > 1 ? 'block' : 'none';
+          nextBtn.style.display = upgradeCurrentStep < 6 ? 'block' : 'none';
+          completeBtn.style.display = upgradeCurrentStep === 6 ? 'block' : 'none';
+          
+          // Update button text
+          if (upgradeCurrentStep === 5) {
+            nextBtn.textContent = 'Proceed to Checkout';
+          } else if (upgradeCurrentStep === 6) {
+            nextBtn.style.display = 'none';
+          } else {
+            nextBtn.textContent = 'Next';
+          }
+          
+          // Enable/disable next button based on validation
+          nextBtn.disabled = !validateUpgradeCurrentStep();
+        }
+
+        // Function to validate upgrade current step
+        function validateUpgradeCurrentStep() {
+          switch (upgradeCurrentStep) {
+            case 1: // Select lines
+              return upgradeData.selectedLines.length > 0;
+            case 2: // Upgrade type
+              return document.querySelector('input[name="upgradeType"]:checked');
+            case 3: // New device (if applicable)
+              const upgradeType = document.querySelector('input[name="upgradeType"]:checked')?.value;
+              if (upgradeType === 'device' || upgradeType === 'full') {
+                return document.getElementById('upgradeDeviceType').value && 
+                       document.getElementById('upgradeDeviceModel').value && 
+                       document.getElementById('upgradeDeviceColor').value && 
+                       document.getElementById('upgradeDeviceStorage').value;
+              }
+              return true;
+            case 4: // New plan (if applicable)
+              if (upgradeType === 'plan' || upgradeType === 'full') {
+                return document.querySelector('input[name="upgradePlanOption"]:checked');
+              }
+              return true;
+            case 5: // Summary
+              return true;
+            case 6: // Checkout
+              return true;
+            default:
+              return false;
+          }
+        }
+
+        // Function to save upgrade current step data
+        function saveUpgradeCurrentStepData() {
+          switch (upgradeCurrentStep) {
+            case 1:
+              // Lines are already saved in updateUpgradeSelectedCount
+              break;
+            case 2:
+              const selectedUpgradeType = document.querySelector('input[name="upgradeType"]:checked');
+              if (selectedUpgradeType) {
+                upgradeData.upgradeType = selectedUpgradeType.value;
+              }
+              break;
+            case 3:
+              const upgradeType = document.getElementById('upgradeDeviceType').value;
+              const upgradeDeviceModel = document.getElementById('upgradeDeviceModel').value;
+              const upgradeDeviceColor = document.getElementById('upgradeDeviceColor').value;
+              const upgradeDeviceStorage = document.getElementById('upgradeDeviceStorage').value;
+              const upgradeDeviceQuantity = parseInt(document.getElementById('upgradeDeviceQuantity').value);
+              
+              if (upgradeType && upgradeDeviceModel && upgradeDeviceColor && upgradeDeviceStorage) {
+                const deviceInfo = deviceData[upgradeType][upgradeDeviceModel];
+                upgradeData.device = {
+                  type: upgradeType,
+                  model: upgradeDeviceModel,
+                  color: upgradeDeviceColor,
+                  storage: upgradeDeviceStorage,
+                  quantity: upgradeDeviceQuantity,
+                  msrp: deviceInfo.msrp,
+                  image: deviceInfo.image
+                };
+              }
+              break;
+            case 4:
+              const selectedPlan = document.querySelector('input[name="upgradePlanOption"]:checked');
+              if (selectedPlan) {
+                const planKey = selectedPlan.value;
+                upgradeData.plan = {
+                  key: planKey,
+                  ...planData[planKey]
+                };
+              }
+              break;
+          }
+        }
+
+        // Function to update upgrade summary
+        function updateUpgradeSummary() {
+          // Update lines summary
+          const linesSummary = document.getElementById('upgradeSummaryLines');
+          let linesHtml = '';
+          
+          upgradeData.selectedLines.forEach(line => {
+            linesHtml += `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>${line.name} (${line.msdn})</span>
+                <span class="badge bg-primary">Selected</span>
+              </div>
+            `;
+          });
+          linesSummary.innerHTML = linesHtml;
+          
+          // Update upgrade details summary
+          const detailsSummary = document.getElementById('upgradeSummaryDetails');
+          let detailsHtml = '';
+          
+          if (upgradeData.upgradeType === 'device' || upgradeData.upgradeType === 'full') {
+            detailsHtml += `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Device:</span>
+                <span>${upgradeData.device.model} - ${upgradeData.device.color}, ${upgradeData.device.storage}</span>
+              </div>
+            `;
+          }
+          
+          if (upgradeData.upgradeType === 'plan' || upgradeData.upgradeType === 'full') {
+            detailsHtml += `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Plan:</span>
+                <span>${upgradeData.plan.name}</span>
+              </div>
+            `;
+          }
+          
+          detailsSummary.innerHTML = detailsHtml;
+          
+          // Update pricing summary
+          const deviceMonthly = upgradeData.device.msrp ? (upgradeData.device.msrp * upgradeData.device.quantity) / 24 : 0;
+          const planChange = upgradeData.plan.price || 0;
+          const totalChange = deviceMonthly + planChange;
+          
+          document.getElementById('upgradeSummaryDeviceMonthly').textContent = `$${deviceMonthly.toFixed(2)}/mo.`;
+          document.getElementById('upgradeSummaryPlanChange').textContent = `$${planChange.toFixed(2)}/mo.`;
+          document.getElementById('upgradeSummaryTotalChange').textContent = `$${totalChange.toFixed(2)}/mo.`;
+          document.getElementById('upgradeSummaryDueNow').textContent = `$${deviceMonthly.toFixed(2)}`;
+          
+          // Store summary data
+          upgradeData.summary = {
+            deviceMonthly,
+            planChange,
+            totalChange,
+            dueNow: deviceMonthly
+          };
+        }
+
+        // Function to update upgrade checkout
+        function updateUpgradeCheckout() {
+          // Populate checkout summary
+          const checkoutSummary = document.getElementById('upgradeCheckoutSummary');
+          let summaryHTML = '';
+          
+          if (upgradeData.device.model) {
+            summaryHTML += `
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h6 class="mb-1">${upgradeData.device.model} (${upgradeData.device.quantity})</h6>
+                  <div class="text-muted small">${upgradeData.device.color}, ${upgradeData.device.storage}</div>
+                </div>
+                <div class="text-end">
+                  <span class="h6 text-primary">$${((upgradeData.device.msrp * upgradeData.device.quantity) / 24).toFixed(2)}/mo.</span>
+                </div>
+              </div>
+            `;
+          }
+          
+          if (upgradeData.plan.name) {
+            summaryHTML += `
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h6 class="mb-1">${upgradeData.plan.name}</h6>
+                </div>
+                <div class="text-end">
+                  <span class="h6 text-primary">$${upgradeData.plan.price.toFixed(2)}/mo.</span>
+                </div>
+              </div>
+            `;
+          }
+          
+          checkoutSummary.innerHTML = summaryHTML;
+          
+          // Update checkout totals
+          const subtotal = upgradeData.summary.dueNow;
+          const taxes = Math.round(subtotal * 0.08 * 100) / 100; // 8% tax
+          const total = subtotal + taxes;
+          
+          document.getElementById('upgradeCheckoutSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+          document.getElementById('upgradeCheckoutTaxes').textContent = `$${taxes.toFixed(2)}`;
+          document.getElementById('upgradeCheckoutTotal').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Event listeners for upgrade modal functionality
+        document.getElementById('upgradeNextBtn').addEventListener('click', function() {
+          if (validateUpgradeCurrentStep()) {
+            saveUpgradeCurrentStepData();
+            upgradeCurrentStep++;
+            updateUpgradeProgress();
+            updateUpgradeModalButtons();
+            
+            if (upgradeCurrentStep === 5) {
+              updateUpgradeSummary();
+            } else if (upgradeCurrentStep === 6) {
+              updateUpgradeCheckout();
+            }
+          }
+        });
+
+        document.getElementById('upgradePrevBtn').addEventListener('click', function() {
+          if (upgradeCurrentStep > 1) {
+            upgradeCurrentStep--;
+            updateUpgradeProgress();
+            updateUpgradeModalButtons();
+          }
+        });
+
+        document.getElementById('upgradeCompleteBtn').addEventListener('click', async function() {
+          // Disable button and show loading state
+          const completeBtn = this;
+          completeBtn.disabled = true;
+          completeBtn.textContent = 'Processing...';
+          
+          try {
+            // Simulate API call for upgrade
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Success - close modal and show confirmation
+            const modal = bootstrap.Modal.getInstance(document.getElementById('upgradeModal'));
+            modal.hide();
+            
+            setTimeout(() => {
+              showComingSoonModal(
+                'Upgrade Completed Successfully!', 
+                `Your upgrade has been processed successfully!\n\nUpgraded Lines:\n${upgradeData.selectedLines.map(line => `• ${line.name} (${line.msdn})`).join('\n')}\n\nUpgrade Type: ${upgradeData.upgradeType.charAt(0).toUpperCase() + upgradeData.upgradeType.slice(1)}\n\nYou will receive confirmation via SMS and email. New devices will be shipped within 2-3 business days.`
+              );
+            }, 300);
+            
+          } catch (error) {
+            console.error('Error processing upgrade:', error);
+            alert('Error: Failed to process upgrade. Please try again.');
+          }
+          
+          // Re-enable button
+          completeBtn.disabled = false;
+          completeBtn.textContent = 'Complete Upgrade';
+        });
+
+        // Upgrade device selection event listeners
+        document.getElementById('upgradeDeviceType').addEventListener('change', function() {
+          const deviceType = this.value;
+          const deviceModelSelect = document.getElementById('upgradeDeviceModel');
+          const deviceColorSelect = document.getElementById('upgradeDeviceColor');
+          const deviceStorageSelect = document.getElementById('upgradeDeviceStorage');
+          
+          // Reset dependent fields
+          deviceModelSelect.innerHTML = '<option value="">Select device type first...</option>';
+          deviceColorSelect.innerHTML = '<option value="">Select model first...</option>';
+          deviceStorageSelect.innerHTML = '<option value="">Select model first...</option>';
+          deviceColorSelect.disabled = true;
+          deviceStorageSelect.disabled = true;
+          
+          if (deviceType && deviceData[deviceType]) {
+            deviceModelSelect.disabled = false;
+            Object.keys(deviceData[deviceType]).forEach(model => {
+              const option = document.createElement('option');
+              option.value = model;
+              option.textContent = model;
+              deviceModelSelect.appendChild(option);
+            });
+          } else {
+            deviceModelSelect.disabled = true;
+          }
+          
+          updateUpgradeModalButtons();
+        });
+
+        document.getElementById('upgradeDeviceModel').addEventListener('change', function() {
+          const deviceType = document.getElementById('upgradeDeviceType').value;
+          const deviceModel = this.value;
+          const deviceColorSelect = document.getElementById('upgradeDeviceColor');
+          const deviceStorageSelect = document.getElementById('upgradeDeviceStorage');
+          
+          // Reset dependent fields
+          deviceColorSelect.innerHTML = '<option value="">Select model first...</option>';
+          deviceStorageSelect.innerHTML = '<option value="">Select model first...</option>';
+          deviceColorSelect.disabled = true;
+          deviceStorageSelect.disabled = true;
+          
+          if (deviceType && deviceModel && deviceData[deviceType][deviceModel]) {
+            const deviceInfo = deviceData[deviceType][deviceModel];
+            
+            // Populate colors
+            deviceColorSelect.disabled = false;
+            deviceInfo.colors.forEach(color => {
+              const option = document.createElement('option');
+              option.value = color;
+              option.textContent = color;
+              deviceColorSelect.appendChild(option);
+            });
+            
+            // Populate storage
+            deviceStorageSelect.disabled = false;
+            deviceInfo.storage.forEach(storage => {
+              const option = document.createElement('option');
+              option.value = storage;
+              option.textContent = storage;
+                             deviceStorageSelect.appendChild(option);
+            });
+          }
+          
+          updateUpgradeModalButtons();
+        });
+
+        document.getElementById('upgradeDeviceColor').addEventListener('change', updateUpgradeModalButtons);
+        document.getElementById('upgradeDeviceStorage').addEventListener('change', updateUpgradeModalButtons);
+
+        // Upgrade type selection event listeners
+        document.querySelectorAll('input[name="upgradeType"]').forEach(radio => {
+          radio.addEventListener('change', updateUpgradeModalButtons);
+        });
+
+        // Upgrade plan selection event listeners
+        document.querySelectorAll('input[name="upgradePlanOption"]').forEach(radio => {
+          radio.addEventListener('change', updateUpgradeModalButtons);
+        });
+
         // Add a Line Modal Functions
         function resetModalForm() {
+            console.log('Resetting modal form...');
+            
             // Reset all form fields
             document.getElementById('deviceType').value = '';
             document.getElementById('deviceModel').value = '';
@@ -2850,6 +3831,41 @@
             document.getElementById('tradeInModel').value = '';
             document.getElementById('tradeInCondition').value = '';
             document.getElementById('tradeInValue').value = '';
+            
+            console.log('Modal form reset complete');
+        }
+
+        function populateModalDropdowns() {
+            console.log('Populating modal dropdowns...');
+            
+            // Populate device type dropdown with data from deviceData
+            const deviceTypeSelect = document.getElementById('deviceType');
+            if (deviceTypeSelect) {
+                // Clear existing hardcoded options
+                deviceTypeSelect.innerHTML = '';
+                
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Choose device type...';
+                deviceTypeSelect.appendChild(defaultOption);
+                
+                // Add device type options from deviceData
+                Object.keys(deviceData).forEach(deviceType => {
+                    const option = document.createElement('option');
+                    option.value = deviceType;
+                    option.textContent = deviceType.charAt(0).toUpperCase() + deviceType.slice(1);
+                    deviceTypeSelect.appendChild(option);
+                });
+                
+                console.log('Device type dropdown populated with', Object.keys(deviceData).length, 'options:', Object.keys(deviceData));
+            } else {
+                console.error('Device type select element not found');
+            }
+            
+            // Note: Plan and protection options are already hardcoded in HTML
+            // The event listeners will handle populating device models, colors, and storage
+            console.log('Modal dropdowns populated successfully');
         }
 
         function updateProgress() {
@@ -3197,10 +4213,15 @@
 
         // Device selection event listeners
         document.getElementById('deviceType').addEventListener('change', function() {
+            console.log('Device type changed to:', this.value);
             const deviceType = this.value;
             const deviceModelSelect = document.getElementById('deviceModel');
             const deviceColorSelect = document.getElementById('deviceColor');
             const deviceStorageSelect = document.getElementById('deviceStorage');
+            
+            console.log('Device model select element:', deviceModelSelect);
+            console.log('Device color select element:', deviceColorSelect);
+            console.log('Device storage select element:', deviceStorageSelect);
             
             // Reset dependent fields
             deviceModelSelect.innerHTML = '<option value="">Select device type first...</option>';
@@ -3210,6 +4231,7 @@
             deviceStorageSelect.disabled = true;
             
             if (deviceType && deviceData[deviceType]) {
+                console.log('Device data found for:', deviceType, deviceData[deviceType]);
                 deviceModelSelect.disabled = false;
                 Object.keys(deviceData[deviceType]).forEach(model => {
                     const option = document.createElement('option');
@@ -3217,7 +4239,9 @@
                     option.textContent = model;
                     deviceModelSelect.appendChild(option);
                 });
+                console.log('Device models populated:', deviceModelSelect.options.length);
             } else {
+                console.log('No device data found for:', deviceType);
                 deviceModelSelect.disabled = true;
             }
             
@@ -3225,6 +4249,7 @@
         });
 
         document.getElementById('deviceModel').addEventListener('change', function() {
+            console.log('Device model changed to:', this.value);
             const deviceType = document.getElementById('deviceType').value;
             const deviceModel = this.value;
             const deviceColorSelect = document.getElementById('deviceColor');
@@ -3238,6 +4263,7 @@
             
             if (deviceType && deviceModel && deviceData[deviceType][deviceModel]) {
                 const deviceInfo = deviceData[deviceType][deviceModel];
+                console.log('Device info found:', deviceInfo);
                 
                 // Populate colors
                 deviceColorSelect.disabled = false;
@@ -3256,6 +4282,8 @@
                     option.textContent = storage;
                     deviceStorageSelect.appendChild(option);
                 });
+            } else {
+                console.log('No device info found for:', deviceType, deviceModel);
             }
             
             updateModalButtons();
@@ -3341,6 +4369,19 @@
         document.getElementById('tradeInCondition').addEventListener('change', updateModalButtons);
 
         // Edit Line Details Functions
+        // Add event listeners for edit line buttons
+        document.addEventListener('DOMContentLoaded', function() {
+          document.querySelectorAll('.edit-line-btn').forEach(button => {
+            button.addEventListener('click', function() {
+              const lineId = this.dataset.lineId;
+              const lineName = this.dataset.lineName;
+              const employeeName = this.dataset.employeeName;
+              const currentDate = this.dataset.paymentDate;
+              editLinePaymentDate(lineId, lineName, employeeName, currentDate);
+            });
+          });
+        });
+
         function editLinePaymentDate(lineId, lineName, employeeName, currentDate) {
             currentEditingLineId = lineId;
             document.getElementById('editLineName').textContent = lineName;
@@ -3406,6 +4447,7 @@
             saveBtn.disabled = false;
             saveBtn.textContent = 'Save Changes';
         });
+        
     </script>
 </body>
 </html> 

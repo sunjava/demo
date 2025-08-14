@@ -103,3 +103,4 @@ class Command(BaseCommand):
                 self.stdout.write(f'✗ Password "{pwd}" failed')
         
         self.stdout.write(self.style.SUCCESS('\n=== Authentication Flow Test Complete ==='))
+

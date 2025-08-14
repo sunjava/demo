@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Add A Line - Simple</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Add A Line Test - Simple</h1>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <h3>Current Status</h3>
+                <p>The Add A Line modal has been updated to:</p>
+                <ul>
+                    <li>✅ Clear hardcoded device type options</li>
+                    <li>✅ Populate device type dropdown from <code>deviceData</code></li>
+                    <li>✅ Keep existing plan and protection options (already hardcoded)</li>
+                    <li>✅ Use existing event listeners for device model/color/storage</li>
+                </ul>
+                
+                <h4>Test Steps:</h4>
+                <ol>
+                    <li>Open the main account details page</li>
+                    <li>Click "Add A Line" button</li>
+                    <li>Check browser console for logs</li>
+                    <li>Verify device type dropdown shows: iPhone, Samsung</li>
+                    <li>Select a device type and verify models populate</li>
+                    <li>Select a model and verify colors/storage populate</li>
+                </ol>
+                
+                <div class="alert alert-info">
+                    <strong>Console Commands Available:</strong><br>
+                    <code>checkAddLineData()</code> - Check if data and elements exist<br>
+                    <code>testAddLineDropdowns()</code> - Test dropdown population<br>
+                    <code>openAddLineModal()</code> - Open the modal directly
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <h3>Expected Data</h3>
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Device Types:</h6>
+                        <ul class="small">
+                            <li>iPhone</li>
+                            <li>Samsung</li>
+                        </ul>
+                        
+                        <h6>Device Models:</h6>
+                        <ul class="small">
+                            <li>iPhone 16 Pro</li>
+                            <li>iPhone 16</li>
+                            <li>Galaxy S24 Ultra</li>
+                            <li>Galaxy S24+</li>
+                        </ul>
+                        
+                        <h6>Plans:</h6>
+                        <ul class="small">
+                            <li>Business Individual Value ($20-60/month)</li>
+                            <li>ONE Plan TFB TE ($25-65/month)</li>
+                            <li>One Plan Voice and Tablet ($35-95/month)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+

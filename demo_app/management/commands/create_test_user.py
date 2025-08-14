@@ -44,3 +44,4 @@ class Command(BaseCommand):
                 f'You can now login at /login/ with these credentials.'
             )
         )
+

@@ -57,3 +57,4 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'Admin site error: {e}'))
         
         self.stdout.write(self.style.SUCCESS('\n=== End Debug Report ==='))
+

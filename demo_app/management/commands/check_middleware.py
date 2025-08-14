@@ -51,3 +51,6 @@ class Command(BaseCommand):
         self.stdout.write(f'CSRF_TRUSTED_ORIGINS: {getattr(settings, "CSRF_TRUSTED_ORIGINS", "Not set")}')
         
         self.stdout.write(self.style.SUCCESS('\n=== Middleware Check Complete ==='))
+
+
+

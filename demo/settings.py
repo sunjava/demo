@@ -190,8 +190,9 @@ if not DEBUG:
         'https://*.ngrok-free.app',
     ]
     
-    # Database connection settings
-    DATABASES['default']['CONN_MAX_AGE'] = 600
-    DATABASES['default']['OPTIONS'] = {
-        'sslmode': 'require',
-    }
+    # Database connection settings - only for PostgreSQL
+    if 'postgresql' in DATABASES['default']['ENGINE']:
+        DATABASES['default']['CONN_MAX_AGE'] = 600
+        DATABASES['default']['OPTIONS'] = {
+            'sslmode': 'require',
+        }
