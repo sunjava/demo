@@ -2083,7 +2083,7 @@
                 Welcome! I can help you manage your lines and services. Try commands like:
             </div>
             <div class="chatbot-suggestions">
-                <span class="suggestion-chip" data-suggestion="Add a service">Add a service</span>
+                <span class="suggestion-chip" data-suggestion="add service to lines">Add a service</span>
                 <span class="suggestion-chip" data-suggestion="Suspend a line">Suspend a line</span>
                 <span class="suggestion-chip" data-suggestion="Restore all suspended lines">Restore lines</span>
                 <span class="suggestion-chip" data-suggestion="Add a new line to this account">Add A Line</span>
@@ -3493,6 +3493,10 @@
                 });
 
                 const data = await response.json();
+                
+                // Debug logging
+                console.log('Chatbot response data:', data);
+                console.log('Trigger modal:', data.trigger_modal);
                 
                 // Remove typing indicator
                 typingIndicator.remove();
