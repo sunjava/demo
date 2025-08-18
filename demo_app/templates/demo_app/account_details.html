@@ -2208,6 +2208,104 @@
           console.log('deviceColor element:', document.getElementById('deviceColor'));
           console.log('deviceStorage element:', document.getElementById('deviceStorage'));
         };
+        
+        // Test function to check plan validation specifically
+        window.testPlanValidation = function() {
+          console.log('=== Testing Plan Validation ===');
+          console.log('Current step:', currentStep);
+          
+          // Check if we're on step 2
+          if (currentStep === 2) {
+            console.log('On step 2, checking plan validation...');
+            const planValid = document.querySelector('input[name="planOption"]:checked');
+            console.log('Plan validation result:', planValid);
+            console.log('Selected plan value:', planValid ? planValid.value : 'none');
+            
+            // Check all plan radio buttons
+            const allPlanRadios = document.querySelectorAll('input[name="planOption"]');
+            console.log('All plan radio buttons:', allPlanRadios);
+            allPlanRadios.forEach((radio, index) => {
+              console.log(`Plan radio ${index + 1}:`, radio.id, 'checked:', radio.checked, 'value:', radio.value);
+            });
+          } else {
+            console.log('Not on step 2, current step is:', currentStep);
+          }
+        };
+        
+        // Test function to check upgrade modal specifically
+        window.testUpgradeModal = function() {
+          console.log('=== Testing Upgrade Modal ===');
+          console.log('Upgrade current step:', upgradeCurrentStep);
+          console.log('Upgrade data:', upgradeData);
+          
+          // Check upgrade type selection
+          const upgradeType = document.querySelector('input[name="upgradeType"]:checked');
+          console.log('Selected upgrade type:', upgradeType ? upgradeType.value : 'none');
+          
+          // Check plan selection if applicable
+          if (upgradeType && (upgradeType.value === 'plan' || upgradeType.value === 'full')) {
+            const planValid = document.querySelector('input[name="upgradePlanOption"]:checked');
+            console.log('Upgrade plan validation result:', planValid);
+            console.log('Selected upgrade plan:', planValid ? planValid.value : 'none');
+            
+            // Check all upgrade plan radio buttons
+            const allUpgradePlanRadios = document.querySelectorAll('input[name="upgradePlanOption"]');
+            console.log('All upgrade plan radio buttons:', allUpgradePlanRadios);
+            allUpgradePlanRadios.forEach((radio, index) => {
+              console.log(`Upgrade plan radio ${index + 1}:`, radio.id, 'checked:', radio.checked, 'value:', radio.value);
+            });
+          }
+          
+          // Check step content visibility
+          console.log('=== Upgrade Step Content Status ===');
+          document.querySelectorAll('#upgradeModal .step-content').forEach((content, index) => {
+            const stepNumber = index + 1;
+            const isActive = content.classList.contains('active');
+            const computedDisplay = window.getComputedStyle(content).display;
+            console.log(`Upgrade Step ${stepNumber} (${content.id}): active=${isActive}, display=${computedDisplay}`);
+          });
+        };
+        
+        // Test function to check add line modal specifically
+        window.testAddLineModal = function() {
+          console.log('=== Testing Add Line Modal ===');
+          console.log('Current step:', currentStep);
+          console.log('Order data:', orderData);
+          
+          // Check step content visibility
+          console.log('=== Add Line Step Content Status ===');
+          document.querySelectorAll('#addLineModal .step-content').forEach((content, index) => {
+            const stepNumber = index + 1;
+            const isActive = content.classList.contains('active');
+            const computedDisplay = window.getComputedStyle(content).display;
+            console.log(`Add Line Step ${stepNumber} (${content.id}): active=${isActive}, display=${computedDisplay}`);
+          });
+          
+          // Check progress steps
+          console.log('=== Add Line Progress Steps Status ===');
+          document.querySelectorAll('#addLineModal .progress-step').forEach((step, index) => {
+            const stepNumber = index + 1;
+            const isActive = step.classList.contains('active');
+            const isCompleted = step.classList.contains('completed');
+            console.log(`Progress Step ${stepNumber}: active=${isActive}, completed=${isCompleted}`);
+          });
+          
+          // Check if form fields are visible
+          console.log('=== Add Line Form Fields Status ===');
+          const deviceType = document.getElementById('deviceType');
+          const deviceModel = document.getElementById('deviceModel');
+          const deviceColor = document.getElementById('deviceColor');
+          const deviceStorage = document.getElementById('deviceStorage');
+          const areaCode = document.getElementById('areaCode');
+          const employeeName = document.getElementById('employeeName');
+          
+          console.log('Device Type field:', deviceType ? 'exists' : 'missing', deviceType ? deviceType.style.display : 'N/A');
+          console.log('Device Model field:', deviceModel ? 'exists' : 'missing', deviceModel ? deviceModel.style.display : 'N/A');
+          console.log('Device Color field:', deviceColor ? 'exists' : 'missing', deviceColor ? deviceColor.style.display : 'N/A');
+          console.log('Device Storage field:', deviceStorage ? 'exists' : 'missing', deviceStorage ? deviceStorage.style.display : 'N/A');
+          console.log('Area Code field:', areaCode ? 'exists' : 'missing', areaCode ? areaCode.style.display : 'N/A');
+          console.log('Employee Name field:', employeeName ? 'exists' : 'missing', employeeName ? employeeName.style.display : 'N/A');
+        };
       
               // Function to open Add Line modal (can be called from button or URL parameter)
         function openAddLineModal() {
@@ -2238,6 +2336,7 @@
             // Populate dropdowns and update UI after modal opens
             setTimeout(() => {
               console.log('Modal opened, populating dropdowns...');
+              console.log('Initial currentStep:', currentStep);
               
               // Populate all dropdowns with data
               populateModalDropdowns();
@@ -2247,6 +2346,7 @@
               updateModalButtons();
               
               console.log('Modal initialization complete');
+              console.log('Final currentStep:', currentStep);
             }, 100);
                     } else {
             console.error('Modal element not found!');
@@ -3435,6 +3535,8 @@
 
         // Function to update upgrade progress
         function updateUpgradeProgress() {
+          console.log('updateUpgradeProgress called with upgradeCurrentStep:', upgradeCurrentStep);
+          
           // Update progress steps
           document.querySelectorAll('#upgradeModal .progress-step').forEach((step, index) => {
             const stepNumber = index + 1;
@@ -3448,11 +3550,31 @@
           });
           
           // Show current step content
+          console.log('=== Updating Upgrade Step Content Visibility ===');
           document.querySelectorAll('#upgradeModal .step-content').forEach((content, index) => {
+            const stepNumber = index + 1;
+            const shouldBeActive = stepNumber === upgradeCurrentStep;
+            console.log(`Upgrade Step content ${stepNumber}:`, content.id, 'should be active:', shouldBeActive);
+            console.log(`Upgrade Step content ${stepNumber} current classes:`, content.className);
+            
             content.classList.remove('active');
-            if (index + 1 === upgradeCurrentStep) {
+            console.log(`Upgrade Step content ${stepNumber} after removing active:`, content.className);
+            
+            if (shouldBeActive) {
               content.classList.add('active');
+              console.log(`Activated upgrade step content: ${content.id}`);
+              console.log(`Upgrade Step content ${stepNumber} final classes:`, content.className);
+              console.log(`Upgrade Step content ${stepNumber} computed display:`, window.getComputedStyle(content).display);
             }
+          });
+          
+          // Final check of all upgrade step content visibility
+          console.log('=== Final Upgrade Step Content Status ===');
+          document.querySelectorAll('#upgradeModal .step-content').forEach((content, index) => {
+            const stepNumber = index + 1;
+            const isActive = content.classList.contains('active');
+            const computedDisplay = window.getComputedStyle(content).display;
+            console.log(`Final - Upgrade Step ${stepNumber} (${content.id}): active=${isActive}, display=${computedDisplay}`);
           });
         }
 
@@ -3482,30 +3604,50 @@
 
         // Function to validate upgrade current step
         function validateUpgradeCurrentStep() {
+          console.log('validateUpgradeCurrentStep called for step:', upgradeCurrentStep);
+          
           switch (upgradeCurrentStep) {
             case 1: // Select lines
-              return upgradeData.selectedLines.length > 0;
+              const linesValid = upgradeData.selectedLines.length > 0;
+              console.log('Upgrade Step 1 validation result:', linesValid, 'Selected lines:', upgradeData.selectedLines.length);
+              return linesValid;
             case 2: // Upgrade type
-              return document.querySelector('input[name="upgradeType"]:checked');
+              const upgradeTypeValid = document.querySelector('input[name="upgradeType"]:checked');
+              console.log('Upgrade Step 2 validation result:', upgradeTypeValid, 'Selected upgrade type:', upgradeTypeValid ? upgradeTypeValid.value : 'none');
+              return upgradeTypeValid;
             case 3: // New device (if applicable)
               const upgradeType = document.querySelector('input[name="upgradeType"]:checked')?.value;
+              console.log('Upgrade Step 3 - upgrade type:', upgradeType);
+              
               if (upgradeType === 'device' || upgradeType === 'full') {
-                return document.getElementById('upgradeDeviceType').value && 
+                const deviceValid = document.getElementById('upgradeDeviceType').value && 
                        document.getElementById('upgradeDeviceModel').value && 
                        document.getElementById('upgradeDeviceColor').value && 
                        document.getElementById('upgradeDeviceStorage').value;
+                console.log('Upgrade Step 3 validation result (device required):', deviceValid);
+                return deviceValid;
               }
+              console.log('Upgrade Step 3 validation result (device not required):', true);
               return true;
             case 4: // New plan (if applicable)
-              if (upgradeType === 'plan' || upgradeType === 'full') {
-                return document.querySelector('input[name="upgradePlanOption"]:checked');
+              const planUpgradeType = document.querySelector('input[name="upgradeType"]:checked')?.value;
+              console.log('Upgrade Step 4 - upgrade type:', planUpgradeType);
+              
+              if (planUpgradeType === 'plan' || planUpgradeType === 'full') {
+                const planValid = document.querySelector('input[name="upgradePlanOption"]:checked');
+                console.log('Upgrade Step 4 validation result (plan required):', planValid, 'Selected plan:', planValid ? planValid.value : 'none');
+                return planValid;
               }
+              console.log('Upgrade Step 4 validation result (plan not required):', true);
               return true;
             case 5: // Summary
+              console.log('Upgrade Step 5 validation result:', true);
               return true;
             case 6: // Checkout
+              console.log('Upgrade Step 6 validation result:', true);
               return true;
             default:
+              console.log('Upgrade Step validation result (default):', false);
               return false;
           }
         }
@@ -3661,17 +3803,44 @@
 
         // Event listeners for upgrade modal functionality
         document.getElementById('upgradeNextBtn').addEventListener('click', function() {
+          console.log('Upgrade Next button clicked. Current step:', upgradeCurrentStep);
+          console.log('Validation result:', validateUpgradeCurrentStep());
+          
           if (validateUpgradeCurrentStep()) {
+            console.log('Upgrade validation passed, saving current step data...');
             saveUpgradeCurrentStepData();
+            console.log('Upgrade data saved:', upgradeData);
+            
+            const previousStep = upgradeCurrentStep;
             upgradeCurrentStep++;
+            console.log(`Upgrade step incremented from ${previousStep} to ${upgradeCurrentStep}`);
+            
+            console.log('About to call updateUpgradeProgress...');
             updateUpgradeProgress();
+            console.log('updateUpgradeProgress completed');
+            
+            console.log('About to call updateUpgradeModalButtons...');
             updateUpgradeModalButtons();
+            console.log('updateUpgradeModalButtons completed');
             
             if (upgradeCurrentStep === 5) {
+              console.log('Moving to upgrade summary step');
               updateUpgradeSummary();
             } else if (upgradeCurrentStep === 6) {
+              console.log('Moving to upgrade checkout step');
               updateUpgradeCheckout();
             }
+            
+            // Debug: Check what step content is currently visible
+            console.log('=== Upgrade Step Content Visibility Check ===');
+            document.querySelectorAll('#upgradeModal .step-content').forEach((content, index) => {
+              const stepNumber = index + 1;
+              const isActive = content.classList.contains('active');
+              const computedDisplay = window.getComputedStyle(content).display;
+              console.log(`Upgrade Step ${stepNumber} (${content.id}): active=${isActive}, display=${computedDisplay}`);
+            });
+          } else {
+            console.log('Upgrade validation failed for step:', upgradeCurrentStep);
           }
         });
 
@@ -3869,24 +4038,53 @@
         }
 
         function updateProgress() {
-            // Update progress steps
-            document.querySelectorAll('.progress-step').forEach((step, index) => {
-                const stepNumber = index + 1;
+            console.log('updateProgress called with currentStep:', currentStep);
+            
+            // Update progress steps - use data-step attribute for accurate step matching
+            document.querySelectorAll('#addLineModal .progress-step').forEach((step) => {
+                const stepNumber = parseInt(step.getAttribute('data-step'));
+                console.log(`Progress step ${stepNumber}:`, step, 'should be active:', stepNumber === currentStep);
+                
                 step.classList.remove('active', 'completed');
                 
                 if (stepNumber < currentStep) {
                     step.classList.add('completed');
+                    console.log(`Marked progress step ${stepNumber} as completed`);
                 } else if (stepNumber === currentStep) {
                     step.classList.add('active');
+                    console.log(`Marked progress step ${stepNumber} as active`);
                 }
             });
             
-            // Show current step content
-            document.querySelectorAll('.step-content').forEach((content, index) => {
+            // Show current step content - only select step content within the add line modal
+            console.log('=== Updating Step Content Visibility ===');
+            document.querySelectorAll('#addLineModal .step-content').forEach((content, index) => {
+                const stepNumber = index + 1;
+                const shouldBeActive = stepNumber === currentStep;
+                console.log(`Step content ${stepNumber}:`, content.id, 'should be active:', shouldBeActive);
+                console.log(`Step content ${stepNumber} current classes:`, content.className);
+                
                 content.classList.remove('active');
-                if (index + 1 === currentStep) {
+                console.log(`Step content ${stepNumber} after removing active:`, content.className);
+                
+                if (shouldBeActive) {
                     content.classList.add('active');
+                    console.log(`Activated step content: ${content.id}`);
+                    console.log(`Step content ${stepNumber} final classes:`, content.className);
+                    console.log(`Step content ${stepNumber} computed display:`, window.getComputedStyle(content).display);
+                    
+                    // Force a reflow to ensure the display change takes effect
+                    content.offsetHeight;
                 }
+            });
+            
+            // Final check of all step content visibility
+            console.log('=== Final Step Content Status ===');
+            document.querySelectorAll('#addLineModal .step-content').forEach((content, index) => {
+                const stepNumber = index + 1;
+                const isActive = content.classList.contains('active');
+                const computedDisplay = window.getComputedStyle(content).display;
+                console.log(`Final - Step ${stepNumber} (${content.id}): active=${isActive}, display=${computedDisplay}`);
             });
         }
 
@@ -3914,36 +4112,54 @@
         }
 
         function validateCurrentStep() {
+            console.log('validateCurrentStep called for step:', currentStep);
+            
             switch (currentStep) {
                 case 1: // Device selection
-                    return document.getElementById('deviceType').value && 
+                    const deviceValid = document.getElementById('deviceType').value && 
                            document.getElementById('deviceModel').value && 
                            document.getElementById('deviceColor').value && 
                            document.getElementById('deviceStorage').value &&
                            document.getElementById('areaCode').value &&
                            document.getElementById('employeeName').value.trim();
+                    console.log('Step 1 validation result:', deviceValid);
+                    return deviceValid;
                 case 2: // Plan selection
-                    return document.querySelector('input[name="planOption"]:checked');
+                    const planValid = document.querySelector('input[name="planOption"]:checked');
+                    console.log('Step 2 validation result:', planValid);
+                    return planValid;
                 case 3: // Protection selection
-                    return document.querySelector('input[name="protectionOption"]:checked');
+                    const protectionValid = document.querySelector('input[name="protectionOption"]:checked');
+                    console.log('Step 3 validation result:', protectionValid);
+                    return protectionValid;
                 case 4: // Trade-in selection
-                    const tradeInSelected = document.getElementById('yesTradeIn').checked;
-                    if (tradeInSelected) {
-                        return document.getElementById('tradeInBrand').value && 
+                    const tradeInSelected = document.querySelector('input[name="tradeInOption"]:checked');
+                    console.log('Trade-in option selected:', tradeInSelected ? tradeInSelected.value : 'none');
+                    
+                    if (tradeInSelected && tradeInSelected.value === 'yes') {
+                        const tradeInValid = document.getElementById('tradeInBrand').value && 
                                document.getElementById('tradeInModel').value && 
                                document.getElementById('tradeInCondition').value;
+                        console.log('Step 4 validation result (with trade-in):', tradeInValid);
+                        return tradeInValid;
                     }
+                    console.log('Step 4 validation result (no trade-in):', true);
                     return true;
                 case 5: // Summary
+                    console.log('Step 5 validation result:', true);
                     return true;
                 case 6: // Checkout
+                    console.log('Step 6 validation result:', true);
                     return true;
                 default:
+                    console.log('Step validation result (default):', false);
                     return false;
             }
         }
 
         function saveCurrentStepData() {
+            console.log('saveCurrentStepData called for step:', currentStep);
+            
             switch (currentStep) {
                 case 1:
                     const deviceType = document.getElementById('deviceType').value;
@@ -3953,6 +4169,8 @@
                     const deviceQuantity = parseInt(document.getElementById('deviceQuantity').value);
                     const areaCode = document.getElementById('areaCode').value;
                     const employeeName = document.getElementById('employeeName').value.trim();
+                    
+                    console.log('Step 1 data:', { deviceType, deviceModel, deviceColor, deviceStorage, areaCode, employeeName });
                     
                     if (deviceType && deviceModel && deviceColor && deviceStorage && areaCode && employeeName) {
                         const deviceInfo = deviceData[deviceType][deviceModel];
@@ -3969,39 +4187,47 @@
                             areaCode: areaCode,
                             employeeName: employeeName
                         };
+                        console.log('Step 1 data saved:', orderData);
                     }
                     break;
                 case 2:
                     const selectedPlan = document.querySelector('input[name="planOption"]:checked');
+                    console.log('Step 2 plan selected:', selectedPlan ? selectedPlan.value : 'none');
                     if (selectedPlan) {
                         const planKey = selectedPlan.value;
                         orderData.plan = {
                             key: planKey,
                             ...planData[planKey]
                         };
+                        console.log('Step 2 plan data saved:', orderData.plan);
                     }
                     break;
                 case 3:
                     const selectedProtection = document.querySelector('input[name="protectionOption"]:checked');
+                    console.log('Step 3 protection selected:', selectedProtection ? selectedProtection.value : 'none');
                     if (selectedProtection) {
                         const protectionKey = selectedProtection.value;
                         orderData.protection = {
                             key: protectionKey,
                             ...protectionData[protectionKey]
                         };
+                        console.log('Step 3 protection data saved:', orderData.protection);
                     }
                     break;
                 case 4:
-                    const tradeInSelected = document.getElementById('yesTradeIn').checked;
-                    if (tradeInSelected) {
+                    const tradeInSelected = document.querySelector('input[name="tradeInOption"]:checked');
+                    console.log('Step 4 trade-in selected:', tradeInSelected ? tradeInSelected.value : 'none');
+                    if (tradeInSelected && tradeInSelected.value === 'yes') {
                         orderData.tradeIn = {
                             brand: document.getElementById('tradeInBrand').value,
                             model: document.getElementById('tradeInModel').value,
                             condition: document.getElementById('tradeInCondition').value,
                             value: parseFloat(document.getElementById('tradeInValue').value) || 0
                         };
+                        console.log('Step 4 trade-in data saved:', orderData.tradeIn);
                     } else {
                         orderData.tradeIn = { value: 0 };
+                        console.log('Step 4 no trade-in, set value to 0');
                     }
                     break;
             }
@@ -4131,17 +4357,44 @@
 
         // Event listeners for modal functionality
         document.getElementById('nextStepBtn').addEventListener('click', function() {
+            console.log('Next button clicked. Current step:', currentStep);
+            console.log('Validation result:', validateCurrentStep());
+            
             if (validateCurrentStep()) {
+                console.log('Validation passed, saving current step data...');
                 saveCurrentStepData();
+                console.log('Current step data saved:', orderData);
+                
+                const previousStep = currentStep;
                 currentStep++;
+                console.log(`Step incremented from ${previousStep} to ${currentStep}`);
+                
+                console.log('About to call updateProgress...');
                 updateProgress();
+                console.log('updateProgress completed');
+                
+                console.log('About to call updateModalButtons...');
                 updateModalButtons();
+                console.log('updateModalButtons completed');
                 
                 if (currentStep === 5) {
+                    console.log('Moving to summary step');
                     updateSummary();
                 } else if (currentStep === 6) {
+                    console.log('Moving to checkout step');
                     updateCheckout();
                 }
+                
+                // Debug: Check what step content is currently visible
+                console.log('=== Step Content Visibility Check ===');
+                document.querySelectorAll('.step-content').forEach((content, index) => {
+                    const stepNumber = index + 1;
+                    const isActive = content.classList.contains('active');
+                    const computedDisplay = window.getComputedStyle(content).display;
+                    console.log(`Step ${stepNumber} (${content.id}): active=${isActive}, display=${computedDisplay}`);
+                });
+            } else {
+                console.log('Validation failed for step:', currentStep);
             }
         });
 
@@ -4321,25 +4574,30 @@
 
         // Plan selection event listeners
         document.querySelectorAll('input[name="planOption"]').forEach(radio => {
-            radio.addEventListener('change', updateModalButtons);
+            radio.addEventListener('change', function() {
+                console.log('Plan selected:', this.value);
+                console.log('Plan validation result:', document.querySelector('input[name="planOption"]:checked'));
+                updateModalButtons();
+            });
         });
 
         // Protection selection event listeners
         document.querySelectorAll('input[name="protectionOption"]').forEach(radio => {
-            radio.addEventListener('change', updateModalButtons);
+            radio.addEventListener('change', function() {
+                console.log('Protection selected:', this.value);
+                console.log('Protection validation result:', document.querySelector('input[name="protectionOption"]:checked'));
+                updateModalButtons();
+            });
         });
 
         // Trade-in selection event listeners
-        document.getElementById('yesTradeIn').addEventListener('change', function() {
-            const tradeInDetails = document.getElementById('tradeInDetails');
-            tradeInDetails.style.display = this.checked ? 'block' : 'none';
-            updateModalButtons();
-        });
-
-        document.getElementById('noTradeIn').addEventListener('change', function() {
-            const tradeInDetails = document.getElementById('tradeInDetails');
-            tradeInDetails.style.display = 'none';
-            updateModalButtons();
+        document.querySelectorAll('input[name="tradeInOption"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                console.log('Trade-in option selected:', this.value);
+                const tradeInDetails = document.getElementById('tradeInDetails');
+                tradeInDetails.style.display = (this.value === 'yes') ? 'block' : 'none';
+                updateModalButtons();
+            });
         });
 
         // Trade-in value calculation
