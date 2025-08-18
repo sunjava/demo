@@ -382,16 +382,55 @@ def restore_lines(account_id: int, line_identifiers: Optional[List[str]] = None)
     try:
         account = get_object_or_404(Account, id=account_id)
         
-        # Find the lines
-        lines = _find_lines(account, line_identifiers)
+        # Log the restore attempt
+        logger.info(f"Attempting to restore lines in account {account_id}. Line identifiers: {line_identifiers}")
+        
+        # Find the lines - specifically look for suspended lines if no identifiers provided
+        if not line_identifiers:
+            lines = _find_lines(account, status_filter='SUSPENDED')
+            logger.info(f"Looking for all suspended lines in account {account_id}")
+        else:
+            lines = _find_lines(account, line_identifiers)
+            logger.info(f"Looking for specific lines with identifiers: {line_identifiers}")
+            
+        logger.info(f"Found {len(lines)} lines for account {account_id}")
+        
         if not lines:
-            return {"success": False, "error": "No matching lines found"}
+            # Provide more detailed error information
+            all_lines = account.lines.all()
+            status_breakdown = {}
+            for line in all_lines:
+                status = line.status
+                if status not in status_breakdown:
+                    status_breakdown[status] = []
+                status_breakdown[status].append(line.line_name)
+            
+            return {
+                "success": False, 
+                "error": f"No matching lines found for identifiers: {line_identifiers}",
+                "status_breakdown": status_breakdown,
+                "total_lines_in_account": all_lines.count()
+            }
         
         # Filter to only suspended lines (can only restore suspended lines)
         suspended_lines = [line for line in lines if line.status == 'SUSPENDED']
+        logger.info(f"Found {len(suspended_lines)} suspended lines out of {len(lines)} total lines")
         
         if not suspended_lines:
-            return {"success": False, "error": "No suspended lines found to restore"}
+            # Show what was found but couldn't be restored
+            status_breakdown = {}
+            for line in lines:
+                status = line.status
+                if status not in status_breakdown:
+                    status_breakdown[status] = []
+                status_breakdown[status].append(line.line_name)
+            
+            return {
+                "success": False, 
+                "error": f"No suspended lines found to restore. Found lines with statuses: {status_breakdown}",
+                "lines_found": len(lines),
+                "suspended_lines": 0
+            }
         
         # Restore lines
         results = []
@@ -433,8 +472,12 @@ def reactivate_cancelled_lines(account_id: int, line_identifiers: Optional[List[
         # Log the reactivation attempt
         logger.info(f"Attempting to reactivate cancelled lines in account {account_id}. Line identifiers: {line_identifiers}")
         
-        # Find the lines
-        lines = _find_lines(account, line_identifiers)
+        # Find the lines - specifically look for cancelled lines if no identifiers provided
+        if not line_identifiers:
+            lines = _find_lines(account, status_filter='CANCELLED')
+        else:
+            lines = _find_lines(account, line_identifiers)
+            
         logger.info(f"Found {len(lines)} lines for account {account_id}")
         
         if not lines:
@@ -656,11 +699,14 @@ def _find_service(service_type: str) -> Optional[Service]:
     return Service.objects.filter(name__icontains=service_type, is_active=True).first()
 
 
-def _find_lines(account: Account, line_identifiers: Optional[List[str]] = None) -> List[Line]:
+def _find_lines(account: Account, line_identifiers: Optional[List[str]] = None, status_filter: Optional[str] = None) -> List[Line]:
     """Find lines by various identifiers"""
     if not line_identifiers:
-        # Return all active lines if no specific identifiers
-        return list(account.lines.filter(status='ACTIVE'))
+        # Return all lines with optional status filter if no specific identifiers
+        if status_filter:
+            return list(account.lines.filter(status=status_filter))
+        else:
+            return list(account.lines.all())
     
     lines = []
     for identifier in line_identifiers:
