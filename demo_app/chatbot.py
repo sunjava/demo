@@ -1008,7 +1008,7 @@ When users mention line identifiers, extract them carefully - they could be:
 
 IMPORTANT: Always ask for clarification when the user's request is ambiguous:
 - If they say "suspend a line" without specifying which one, ask them to specify the employee name, phone number, or line name
-- If they say "add a service" without specifying which service, ask them to choose from: 1-day pass ($1), 10-day pass ($35), or 30-day pass ($50)
+- If they say "add a service" without specifying which service, open the Add Service modal for them to select
 - If they say "upgrade a line" without specifying which one, ask them to specify the employee name, phone number, or line name
 - If multiple lines match their request, show them the options and ask them to be more specific
 - Never assume which line they want to suspend, upgrade, or which service they want to add - always ask for clarification
@@ -1020,8 +1020,8 @@ For line management operations:
 - If no specific lines are mentioned, you can suspend all active lines, restore all suspended lines, or reactivate all cancelled lines
 
 For service additions:
+- If users don't specify which service, open the Add Service modal for selection
 - Always confirm the service type, duration, and cost before proceeding
-- Ask users to specify which service they want if they don't mention it
 - Show pricing information: 1-day ($1), 10-day ($35), 30-day ($50)
 
 For line upgrades:

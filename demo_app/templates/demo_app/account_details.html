@@ -2083,7 +2083,7 @@
                 Welcome! I can help you manage your lines and services. Try commands like:
             </div>
             <div class="chatbot-suggestions">
-                <span class="suggestion-chip" data-suggestion="Add a service to lines">Add service to all lines</span>
+                <span class="suggestion-chip" data-suggestion="Add a service">Add a service</span>
                 <span class="suggestion-chip" data-suggestion="Suspend a line">Suspend a line</span>
                 <span class="suggestion-chip" data-suggestion="Restore all suspended lines">Restore lines</span>
                 <span class="suggestion-chip" data-suggestion="Add a new line to this account">Add A Line</span>
@@ -2413,6 +2413,109 @@
             console.error('Modal element not found!');
           }
         }
+      
+      // Function to open Add Service modal
+      function openAddServiceModal() {
+        console.log('Opening Add Service modal...');
+        
+        // Reset form fields
+        document.getElementById('serviceSelect').value = '';
+        document.getElementById('serviceDetails').style.display = 'none';
+        document.getElementById('nextBtn').disabled = true;
+        
+        // Show modal
+        var modalElement = document.getElementById('addServiceModal');
+        if (modalElement) {
+          var modal = new bootstrap.Modal(modalElement);
+          modal.show();
+          
+          // Add event listener for service selection
+          const serviceSelect = document.getElementById('serviceSelect');
+          const nextBtn = document.getElementById('nextBtn');
+          const serviceDetails = document.getElementById('serviceDetails');
+          
+          serviceSelect.addEventListener('change', function() {
+            const selectedValue = this.value;
+            if (selectedValue) {
+              nextBtn.disabled = false;
+              showServiceDetails(selectedValue);
+            } else {
+              nextBtn.disabled = true;
+              serviceDetails.style.display = 'none';
+            }
+          });
+          
+          // Add event listener for Next button
+          nextBtn.addEventListener('click', function() {
+            const selectedValue = serviceSelect.value;
+            if (selectedValue) {
+              // Close this modal and open line selection modal
+              var addServiceModal = bootstrap.Modal.getInstance(document.getElementById('addServiceModal'));
+              addServiceModal.hide();
+              
+              // Open line selection modal (you'll need to create this)
+              openLineSelectionModal(selectedValue);
+            }
+          });
+        } else {
+          console.error('Add Service modal element not found!');
+        }
+      }
+      
+      // Function to show service details
+      function showServiceDetails(serviceValue) {
+        const serviceDetails = document.getElementById('serviceDetails');
+        const serviceDetailsContent = document.getElementById('serviceDetailsContent');
+        
+        let serviceInfo = '';
+        switch(serviceValue) {
+          case '1day':
+            serviceInfo = `
+              <div class="alert alert-info">
+                <h6>1 Day International Pass</h6>
+                <p class="mb-1"><strong>Price:</strong> $1.00</p>
+                <p class="mb-1"><strong>Data:</strong> 512MB</p>
+                <p class="mb-1"><strong>Duration:</strong> 1 day</p>
+                <p class="mb-0"><strong>Coverage:</strong> 210+ countries</p>
+              </div>
+            `;
+            break;
+          case '10day':
+            serviceInfo = `
+              <div class="alert alert-info">
+                <h6>10 Day International Pass</h6>
+                <p class="mb-1"><strong>Price:</strong> $35.00</p>
+                <p class="mb-1"><strong>Data:</strong> 5GB</p>
+                <p class="mb-1"><strong>Duration:</strong> 10 days</p>
+                <p class="mb-0"><strong>Coverage:</strong> 210+ countries</p>
+              </div>
+            `;
+            break;
+          case '30day':
+            serviceInfo = `
+              <div class="alert alert-info">
+                <h6>30 Day International Pass</h6>
+                <p class="mb-1"><strong>Price:</strong> $50.00</p>
+                <p class="mb-1"><strong>Data:</strong> 15GB</p>
+                <p class="mb-1"><strong>Duration:</strong> 30 days</p>
+                <p class="mb-0"><strong>Coverage:</strong> 210+ countries</p>
+              </div>
+            `;
+            break;
+        }
+        
+        serviceDetailsContent.innerHTML = serviceInfo;
+        serviceDetails.style.display = 'block';
+      }
+      
+      // Function to open line selection modal
+      function openLineSelectionModal(selectedService) {
+        // For now, just show a message - you can enhance this later
+        showComingSoonModal(
+          'Line Selection', 
+          `You selected the ${selectedService} service. Line selection functionality will be implemented next.`
+        );
+      }
       
       // Check for URL parameters and handle accordingly
       const urlParams = new URLSearchParams(window.location.search);
@@ -3510,18 +3613,6 @@
           plan: {},
           summary: {}
         };
-
-        // Function to open Add Service modal
-        function openAddServiceModal() {
-          console.log('Opening Add Service modal');
-          const modalElement = document.getElementById('addServiceModal');
-          if (modalElement) {
-            var modal = new bootstrap.Modal(modalElement);
-            modal.show();
-          } else {
-            console.error('Add Service modal element not found');
-          }
-        }
 
         // Function to open Upgrade modal
         function openUpgradeModal() {
