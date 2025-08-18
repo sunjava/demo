@@ -3511,6 +3511,18 @@
           summary: {}
         };
 
+        // Function to open Add Service modal
+        function openAddServiceModal() {
+          console.log('Opening Add Service modal');
+          const modalElement = document.getElementById('addServiceModal');
+          if (modalElement) {
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+          } else {
+            console.error('Add Service modal element not found');
+          }
+        }
+
         // Function to open Upgrade modal
         function openUpgradeModal() {
           // Reset modal state
