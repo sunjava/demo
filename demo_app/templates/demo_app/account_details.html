@@ -272,17 +272,19 @@
         
         .chatbot-container {
             position: fixed;
-            bottom: 100px;
+            bottom: 20px;
             right: 20px;
-            width: 400px;
-            height: 600px;
+            width: min(90vw, 420px);
+            height: min(80vh, 640px);
+            max-height: calc(100vh - 40px);
             background: white;
             border-radius: 1rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-            z-index: 999;
+            z-index: 2000;
             display: none;
             flex-direction: column;
             overflow: hidden;
+            border: 2px solid var(--tmobile-magenta);
         }
         
         .chatbot-header {
@@ -292,6 +294,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            z-index: 1002;
+            border-radius: 1rem 1rem 0 0;
+            min-height: 56px;
         }
         
         .chatbot-title {
@@ -300,17 +306,26 @@
         }
         
         .chatbot-close {
-            background: none;
-            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
             color: white;
             font-size: 1.2rem;
             cursor: pointer;
             padding: 0;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 1001;
+        }
+        
+        .chatbot-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
         }
         
         .chatbot-messages {
@@ -320,6 +335,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            min-height: 0; /* allow flex child to shrink within container */
         }
         
         .message {
@@ -388,6 +404,7 @@
             padding: 1rem;
             border-top: 1px solid #e9ecef;
             background: #f8f9fa;
+            flex-shrink: 0;
         }
         
         .chatbot-input-group {
@@ -2266,6 +2283,50 @@
           });
         };
         
+        // Test function to check chatbot functionality
+        window.testChatbot = function() {
+            console.log('=== Testing Chatbot ===');
+            console.log('Chatbot toggle element:', document.getElementById('chatbotToggle'));
+            console.log('Chatbot container element:', document.getElementById('chatbotContainer'));
+            console.log('Chatbot close button element:', document.getElementById('chatbotClose'));
+            console.log('Chatbot open state:', chatbotOpen);
+            console.log('Chatbot container display:', document.getElementById('chatbotContainer').style.display);
+            console.log('Chatbot container computed display:', window.getComputedStyle(document.getElementById('chatbotContainer')).display);
+            
+            // Check header visibility
+            const header = document.querySelector('.chatbot-header');
+            if (header) {
+                console.log('Chatbot header element:', header);
+                console.log('Header computed styles:', {
+                    display: window.getComputedStyle(header).display,
+                    visibility: window.getComputedStyle(header).visibility,
+                    opacity: window.getComputedStyle(header).opacity,
+                    height: window.getComputedStyle(header).height,
+                    background: window.getComputedStyle(header).background,
+                    zIndex: window.getComputedStyle(header).zIndex
+                });
+                console.log('Header bounding rect:', header.getBoundingClientRect());
+            } else {
+                console.error('Chatbot header not found!');
+            }
+            
+            // Check close button visibility
+            const closeBtn = document.getElementById('chatbotClose');
+            if (closeBtn) {
+                console.log('Close button computed styles:', {
+                    display: window.getComputedStyle(closeBtn).display,
+                    visibility: window.getComputedStyle(closeBtn).visibility,
+                    opacity: window.getComputedStyle(closeBtn).opacity,
+                    width: window.getComputedStyle(closeBtn).width,
+                    height: window.getComputedStyle(closeBtn).height,
+                    background: window.getComputedStyle(closeBtn).background
+                });
+                console.log('Close button bounding rect:', closeBtn.getBoundingClientRect());
+            } else {
+                console.error('Chatbot close button not found!');
+            }
+        };
+        
         // Test function to check add line modal specifically
         window.testAddLineModal = function() {
           console.log('=== Testing Add Line Modal ===');
@@ -3232,17 +3293,47 @@
 
         // Toggle chatbot
         chatbotToggle.addEventListener('click', function() {
+            console.log('Chatbot toggle clicked, current state:', chatbotOpen);
             chatbotOpen = !chatbotOpen;
             chatbotContainer.style.display = chatbotOpen ? 'flex' : 'none';
+            console.log('Chatbot toggled to:', chatbotOpen, 'display:', chatbotContainer.style.display);
+            
             if (chatbotOpen) {
                 chatbotInput.focus();
                 // Keep chat open - don't close after each message
+                
+                // Debug: Check if header and close button are visible after opening
+                setTimeout(() => {
+                    console.log('=== Chatbot opened, checking elements ===');
+                    const header = document.querySelector('.chatbot-header');
+                    const closeBtn = document.getElementById('chatbotClose');
+                    const container = document.getElementById('chatbotContainer');
+                    
+                    console.log('Container display:', container.style.display);
+                    console.log('Header found:', !!header);
+                    console.log('Close button found:', !!closeBtn);
+                    
+                    if (header) {
+                        console.log('Header display:', window.getComputedStyle(header).display);
+                        console.log('Header height:', window.getComputedStyle(header).height);
+                    }
+                    
+                    if (closeBtn) {
+                        console.log('Close button display:', window.getComputedStyle(closeBtn).display);
+                        console.log('Close button dimensions:', {
+                            width: window.getComputedStyle(closeBtn).width,
+                            height: window.getComputedStyle(closeBtn).height
+                        });
+                    }
+                }, 100);
             }
         });
 
         chatbotClose.addEventListener('click', function() {
+            console.log('Chatbot close button clicked');
             chatbotOpen = false;
             chatbotContainer.style.display = 'none';
+            console.log('Chatbot closed, chatbotOpen:', chatbotOpen);
         });
 
         // Auto-resize textarea
