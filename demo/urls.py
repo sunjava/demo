@@ -20,7 +20,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 from demo_app.views import (
-    hello_world, account_details, all_accounts, all_lines, login_view, logout_view, signup_view,
+    hello_world, account_details, all_lines, line_details, all_accounts, login_view, logout_view, signup_view,
     get_services, add_service_to_lines, get_line_services, get_account_lines,
     suspend_lines, restore_lines, chatbot_message, create_line, update_account_status,
     add_line_account_selection, update_line_payment_date, update_line_details, create_mirrored_line,
@@ -35,6 +35,7 @@ urlpatterns = [
     path('lines/', all_lines, name='all_lines'),
     path('add-line/', add_line_account_selection, name='add_line_account_selection'),
     path('accounts/<int:account_id>/', account_details, name='account_details'),
+    path('accounts/<int:account_id>/lines/<int:line_id>/', line_details, name='line_details'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('signup/', signup_view, name='signup'),

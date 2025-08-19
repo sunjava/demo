@@ -113,6 +113,11 @@
         .lines-table td, .lines-table th {
             vertical-align: middle;
         }
+        
+        .lines-table a:hover {
+            color: #b8005a !important;
+            text-decoration: underline !important;
+        }
         /* Custom Checkbox */
         .form-check-input:checked {
             background-color: var(--tmobile-magenta);
@@ -919,8 +924,16 @@
                                 {% for line in lines %}
                                 <tr data-line-id="{{ line.id }}">
                                     <td><input class="form-check-input line-checkbox" type="checkbox" data-line-id="{{ line.id }}" /></td>
-                                    <td>{{ line.line_name }}</td>
-                                    <td>{{ line.msdn }}</td>
+                                    <td>
+                                        <a href="{% url 'line_details' account.id line.id %}" class="text-decoration-none" style="color: var(--tmobile-magenta); font-weight: 500;">
+                                            {{ line.line_name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'line_details' account.id line.id %}" class="text-decoration-none" style="color: var(--tmobile-magenta); font-weight: 500;">
+                                            {{ line.msdn }}
+                                        </a>
+                                    </td>
                                     <td>{{ line.employee_name }}</td>
                                     <td>{{ line.employee_number }}</td>
                                     <td>{{ line.added_on|date:"d M Y" }}</td>

@@ -156,6 +156,23 @@ def account_details(request, account_id):
     }
     return render(request, 'demo_app/account_details.html', context)
 
+@login_required
+def line_details(request, account_id, line_id):
+    """Display line details with services"""
+    account = get_object_or_404(Account, id=account_id)
+    line = get_object_or_404(Line, id=line_id, account=account)
+    
+    # Get services for this line (you may need to create this model/relationship)
+    # For now, we'll use a placeholder - you can implement this based on your data model
+    line_services = []  # Placeholder - replace with actual service query
+    
+    context = {
+        'account': account,
+        'line': line,
+        'line_services': line_services,
+    }
+    return render(request, 'demo_app/line_details.html', context)
+
 @csrf_exempt
 def login_view(request):
     if request.method == 'POST':
