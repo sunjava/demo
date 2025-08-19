@@ -23,13 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 # Tool functions for OpenAI function calling
-def add_service_to_lines(account_id: int, service_type: str, line_identifiers: Optional[List[str]] = None) -> Dict[str, Any]:
+def add_service_to_lines(account_id: int, service_type: Optional[str] = None, line_identifiers: Optional[List[str]] = None) -> Dict[str, Any]:
     """
     Add a service to one or more lines in a T-Mobile account.
     
     Args:
         account_id: The account ID to add services to
-        service_type: Type of service to add (e.g., "1_day", "10_day", "30_day", "international_pass")
+        service_type: Type of service to add (e.g., "1_day", "10_day", "30_day", "international_pass"). If None or empty, opens the Add Service modal.
         line_identifiers: List of line identifiers (names, MSNDs, employee names/numbers, etc.). If None, adds to all lines.
     
     Returns:
@@ -780,7 +780,7 @@ class AITMobileChatbot:
                         },
                         "service_type": {
                             "type": "string",
-                            "description": "Type of service to add",
+                            "description": "Type of service to add. If not specified, opens the Add Service modal for selection.",
                             "enum": ["1_day", "10_day", "30_day", "international_pass"]
                         },
                         "line_identifiers": {
@@ -789,7 +789,7 @@ class AITMobileChatbot:
                             "description": "List of line identifiers (names, phone numbers, employee names/numbers). Leave empty to add to all lines."
                         }
                     },
-                    "required": ["account_id", "service_type"]
+                    "required": ["account_id"]
                 }
             },
             {
