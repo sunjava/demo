@@ -2831,6 +2831,44 @@
         document.getElementById('nextBtn').textContent = 'Next';
         document.getElementById('nextBtn').disabled = true;
         document.getElementById('selectedLinesCount').style.display = 'none';
+        
+        // Update modal title and button text based on pre-selected lines
+        updateModalForPreSelectedLines();
+      }
+      
+      // Function to check if lines are already selected in main table
+      function hasPreSelectedLines() {
+        const selectedCheckboxes = document.querySelectorAll('#linesTable .line-checkbox:checked');
+        return selectedCheckboxes.length > 0;
+      }
+      
+      // Function to get pre-selected lines from main table
+      function getPreSelectedLines() {
+        const selectedCheckboxes = document.querySelectorAll('#linesTable .line-checkbox:checked');
+        return Array.from(selectedCheckboxes).map(checkbox => {
+          const row = checkbox.closest('tr');
+          return {
+            id: parseInt(checkbox.dataset.lineId),
+            name: row.querySelector('td:nth-child(2)').textContent,
+            msdn: row.querySelector('td:nth-child(3)').textContent
+          };
+        });
+      }
+      
+      // Function to update modal title and button text based on pre-selected lines
+      function updateModalForPreSelectedLines() {
+        const modalTitle = document.getElementById('addServiceModalLabel');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        if (hasPreSelectedLines()) {
+          const preSelectedLines = getPreSelectedLines();
+          const lineCount = preSelectedLines.length;
+          modalTitle.textContent = `Add a Service (${lineCount} line${lineCount > 1 ? 's' : ''} selected)`;
+          nextBtn.textContent = 'Add Service';
+        } else {
+          modalTitle.textContent = 'Add a Service';
+          nextBtn.textContent = 'Next';
+        }
       }
       
       document.getElementById('serviceSelect').addEventListener('change', function() {
@@ -2842,6 +2880,9 @@
         
         if (this.value) {
           serviceDetails.style.display = 'block';
+          
+          // Update modal title and button text based on pre-selected lines
+          updateModalForPreSelectedLines();
           
           const selectedService = availableServices.find(service => service.id == this.value);
           if (selectedService) {
@@ -2857,6 +2898,17 @@
           });
           detailsHtml += '</ul>';
           
+          // Add pre-selected lines info if any
+          if (hasPreSelectedLines()) {
+            const preSelectedLines = getPreSelectedLines();
+            detailsHtml += `<div class="alert alert-info mt-3 mb-0">`;
+            detailsHtml += `<i class="fas fa-info-circle me-2"></i>`;
+            detailsHtml += `<strong>${preSelectedLines.length} line${preSelectedLines.length > 1 ? 's' : ''} pre-selected:</strong> `;
+            detailsHtml += preSelectedLines.map(line => `${line.name} (${line.msdn})`).join(', ');
+            detailsHtml += `<br><small class="text-muted">You can proceed directly to checkout or go back to select different lines.</small>`;
+            detailsHtml += `</div>`;
+          }
+          
           serviceDetailsContent.innerHTML = detailsHtml;
           }
         } else {
@@ -2866,22 +2918,37 @@
 
       document.getElementById('nextBtn').addEventListener('click', function() {
         if (addServiceModalStep === 1) {
-          // Step 1: Service selected, show line selection
+          // Step 1: Service selected, check if lines are pre-selected
           const selectedServiceId = document.getElementById('serviceSelect').value;
           if (selectedServiceId) {
-            // Show line selection
-            document.getElementById('serviceDetails').style.display = 'none';
-            document.getElementById('lineSelection').style.display = 'block';
-            
-            // Populate lines table
-            populateLinesTable();
-            
-            // Update buttons
-            document.getElementById('backBtn').style.display = 'inline-block';
-            document.getElementById('nextBtn').textContent = 'Add Service';
-            document.getElementById('nextBtn').disabled = true;
-            
-            addServiceModalStep = 2;
+            if (hasPreSelectedLines()) {
+              // Lines are already selected, skip to checkout
+              const preSelectedLines = getPreSelectedLines();
+              populateCheckoutModal(selectedServiceId, preSelectedLines);
+              
+              // Close add service modal and open checkout modal
+              var addServiceModal = bootstrap.Modal.getInstance(document.getElementById('addServiceModal'));
+              addServiceModal.hide();
+              
+              setTimeout(() => {
+                var checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+                checkoutModal.show();
+              }, 300);
+            } else {
+              // No lines pre-selected, show line selection
+              document.getElementById('serviceDetails').style.display = 'none';
+              document.getElementById('lineSelection').style.display = 'block';
+              
+              // Populate lines table
+              populateLinesTable();
+              
+              // Update buttons
+              document.getElementById('backBtn').style.display = 'inline-block';
+              document.getElementById('nextBtn').textContent = 'Add Service';
+              document.getElementById('nextBtn').disabled = true;
+              
+              addServiceModalStep = 2;
+            }
           }
         } else if (addServiceModalStep === 2) {
           // Step 2: Lines selected, proceed to checkout
