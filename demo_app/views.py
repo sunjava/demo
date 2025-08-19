@@ -852,15 +852,15 @@ def chatbot_message(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_line_details(request):
-    """Update employee name and payment due date for a specific line"""
+    """Update employee name and employee number for a specific line"""
     try:
         data = json.loads(request.body)
         line_id = data.get('line_id')
         employee_name = data.get('employee_name')
-        payment_date_str = data.get('payment_date')
+        employee_number = data.get('employee_number')
         
-        if not line_id or not employee_name or not payment_date_str:
-            return JsonResponse({'error': 'line_id, employee_name, and payment_date are required'}, status=400)
+        if not line_id or not employee_name or not employee_number:
+            return JsonResponse({'error': 'line_id, employee_name, and employee_number are required'}, status=400)
         
         # Validate line exists
         try:
@@ -868,18 +868,11 @@ def update_line_details(request):
         except Line.DoesNotExist:
             return JsonResponse({'error': 'Line not found'}, status=404)
         
-        # Parse and validate date
-        try:
-            from datetime import datetime
-            payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=400)
-        
         # Update the line
         old_employee_name = line.employee_name
-        old_payment_date = line.payment_due_date
+        old_employee_number = line.employee_number
         line.employee_name = employee_name
-        line.payment_due_date = payment_date
+        line.employee_number = employee_number
         line.save()
         
         return JsonResponse({
@@ -890,8 +883,8 @@ def update_line_details(request):
                 'line_name': line.line_name,
                 'old_employee_name': old_employee_name,
                 'new_employee_name': employee_name,
-                'old_payment_date': old_payment_date.isoformat() if old_payment_date else None,
-                'new_payment_date': payment_date.isoformat()
+                'old_employee_number': old_employee_number,
+                'new_employee_number': employee_number
             }
         })
         

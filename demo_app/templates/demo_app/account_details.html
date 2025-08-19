@@ -944,7 +944,7 @@
                                                 data-line-id="{{ line.id }}" 
                                                 data-line-name="{{ line.line_name }}" 
                                                 data-employee-name="{{ line.employee_name }}" 
-                                                data-payment-date="{{ line.payment_due_date|date:'Y-m-d'|default:'' }}">
+                                                data-employee-number="{{ line.employee_number }}">
                                             <i class="bi bi-pencil"></i> Edit Details
                                         </button>
                                     </td>
@@ -990,8 +990,8 @@
                         <input type="text" class="form-control" id="editEmployeeName" required>
                     </div>
                     <div class="mb-3">
-                        <label for="editPaymentDate" class="form-label">Payment Due Date</label>
-                        <input type="date" class="form-control" id="editPaymentDate" required>
+                        <label for="editEmployeeNumber" class="form-label">Employee Number</label>
+                        <input type="text" class="form-control" id="editEmployeeNumber" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -5205,17 +5205,17 @@
               const lineId = this.dataset.lineId;
               const lineName = this.dataset.lineName;
               const employeeName = this.dataset.employeeName;
-              const currentDate = this.dataset.paymentDate;
-              editLinePaymentDate(lineId, lineName, employeeName, currentDate);
+              const employeeNumber = this.dataset.employeeNumber;
+              editLineDetails(lineId, lineName, employeeName, employeeNumber);
             });
           });
         });
 
-        function editLinePaymentDate(lineId, lineName, employeeName, currentDate) {
+        function editLineDetails(lineId, lineName, employeeName, employeeNumber) {
             currentEditingLineId = lineId;
             document.getElementById('editLineName').textContent = lineName;
             document.getElementById('editEmployeeName').value = employeeName;
-            document.getElementById('editPaymentDate').value = currentDate;
+            document.getElementById('editEmployeeNumber').value = employeeNumber;
             
             const modal = new bootstrap.Modal(document.getElementById('editPaymentDateModal'));
             modal.show();
@@ -5223,15 +5223,15 @@
 
         document.getElementById('savePaymentDateBtn').addEventListener('click', async function() {
             const employeeName = document.getElementById('editEmployeeName').value.trim();
-            const paymentDate = document.getElementById('editPaymentDate').value;
+            const employeeNumber = document.getElementById('editEmployeeNumber').value.trim();
             
             if (!employeeName) {
                 alert('Please enter an employee name');
                 return;
             }
             
-            if (!paymentDate) {
-                alert('Please select a payment due date');
+            if (!employeeNumber) {
+                alert('Please enter an employee number');
                 return;
             }
             
@@ -5248,7 +5248,7 @@
                     body: JSON.stringify({
                         line_id: currentEditingLineId,
                         employee_name: employeeName,
-                        payment_date: paymentDate
+                        employee_number: employeeNumber
                     })
                 });
                 
