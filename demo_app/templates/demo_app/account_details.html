@@ -869,7 +869,7 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table lines-table align-middle mb-0">
+                        <table class="table lines-table align-middle mb-0" id="linesTable">
                             <thead>
                                 <tr>
                                     <th scope="col" style="width:40px"><input class="form-check-input" type="checkbox" /></th>
@@ -2839,6 +2839,7 @@
       // Function to check if lines are already selected in main table
       function hasPreSelectedLines() {
         const selectedCheckboxes = document.querySelectorAll('#linesTable .line-checkbox:checked');
+        console.log('Checking for pre-selected lines:', selectedCheckboxes.length, 'found');
         return selectedCheckboxes.length > 0;
       }
       
@@ -2990,13 +2991,17 @@
         
         // Get all lines from the main table
         const lineRows = document.querySelectorAll('#linesTable tbody tr');
+        console.log('Found line rows:', lineRows.length);
         
-        lineRows.forEach(row => {
+        lineRows.forEach((row, index) => {
           const lineId = row.dataset.lineId;
           const lineName = row.querySelector('td:nth-child(2)').textContent;
-          const employeeName = row.querySelector('td:nth-child(3)').textContent;
-          const phoneNumber = row.querySelector('td:nth-child(4)').textContent;
-          const status = row.querySelector('td:nth-child(5)').textContent;
+          const phoneNumber = row.querySelector('td:nth-child(3)').textContent;
+          const employeeName = row.querySelector('td:nth-child(4)').textContent;
+          const employeeNumber = row.querySelector('td:nth-child(5)').textContent;
+          const status = row.querySelector('td:nth-child(8)').textContent;
+          
+          console.log(`Row ${index}: ID=${lineId}, Name=${lineName}, Phone=${phoneNumber}, Employee=${employeeName}, Status=${status}`);
           
           // Only show active lines
           if (status.trim() === 'Active') {
@@ -3011,8 +3016,11 @@
               <td><span class="badge bg-success">${status}</span></td>
             `;
             tbody.appendChild(tr);
+            console.log(`Added active line: ${lineName}`);
           }
         });
+        
+        console.log('Total lines added to modal:', tbody.children.length);
         
         // Add event listeners for checkboxes
         addLineSelectionListeners();
