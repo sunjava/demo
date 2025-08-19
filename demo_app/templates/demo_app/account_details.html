@@ -1000,10 +1000,42 @@
                 <h6 class="text-primary mb-3">Service Details</h6>
                 <div id="serviceDetailsContent"></div>
               </div>
+              
+              <!-- Line Selection Section -->
+              <div id="lineSelection" class="mt-4" style="display: none;">
+                <h6 class="text-primary mb-3">Select Lines</h6>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Select the lines you want to add this service to. You can select multiple lines.
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th width="50">
+                          <input type="checkbox" id="selectAllLines" class="form-check-input">
+                        </th>
+                        <th>Line Name</th>
+                        <th>Employee</th>
+                        <th>Phone Number</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="linesTableBody">
+                      <!-- Lines will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+                <div id="selectedLinesCount" class="text-muted small mt-2" style="display: none;">
+                  <i class="fas fa-check-circle text-success me-1"></i>
+                  <span id="selectedCount">0</span> line(s) selected
+                </div>
+              </div>
             </form>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-outline-secondary" id="backBtn" style="display: none;">Back</button>
             <button type="button" class="btn btn-primary" id="nextBtn" disabled>Next</button>
           </div>
         </div>
@@ -1032,6 +1064,15 @@
                       <div class="text-end">
                         <span class="h5 text-primary" id="checkoutServicePrice">$0</span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <h6 class="card-title mb-2">Selected Lines</h6>
+                    <div id="checkoutSelectedLines" class="text-muted small">
+                      <!-- Selected lines will be populated here -->
                     </div>
                   </div>
                 </div>
@@ -2705,6 +2746,8 @@
           if (modalElement) {
             var modal = new bootstrap.Modal(modalElement);
             modal.show();
+            // Reset modal state when opened
+            resetAddServiceModal();
           } else {
             console.error('Modal element not found');
           }
@@ -2776,6 +2819,20 @@
       }
 
       // Add Service Modal functionality
+      let addServiceModalStep = 1; // 1 = service selection, 2 = line selection
+      
+      // Function to reset Add Service modal state
+      function resetAddServiceModal() {
+        addServiceModalStep = 1;
+        document.getElementById('serviceSelect').value = '';
+        document.getElementById('serviceDetails').style.display = 'none';
+        document.getElementById('lineSelection').style.display = 'none';
+        document.getElementById('backBtn').style.display = 'none';
+        document.getElementById('nextBtn').textContent = 'Next';
+        document.getElementById('nextBtn').disabled = true;
+        document.getElementById('selectedLinesCount').style.display = 'none';
+      }
+      
       document.getElementById('serviceSelect').addEventListener('change', function() {
         const nextBtn = document.getElementById('nextBtn');
         const serviceDetails = document.getElementById('serviceDetails');
@@ -2808,18 +2865,37 @@
       });
 
       document.getElementById('nextBtn').addEventListener('click', function() {
-        const selectedServiceId = document.getElementById('serviceSelect').value;
-        if (selectedServiceId) {
-          // Get selected lines before proceeding
-          selectedLines = getSelectedLines();
+        if (addServiceModalStep === 1) {
+          // Step 1: Service selected, show line selection
+          const selectedServiceId = document.getElementById('serviceSelect').value;
+          if (selectedServiceId) {
+            // Show line selection
+            document.getElementById('serviceDetails').style.display = 'none';
+            document.getElementById('lineSelection').style.display = 'block';
+            
+            // Populate lines table
+            populateLinesTable();
+            
+            // Update buttons
+            document.getElementById('backBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').textContent = 'Add Service';
+            document.getElementById('nextBtn').disabled = true;
+            
+            addServiceModalStep = 2;
+          }
+        } else if (addServiceModalStep === 2) {
+          // Step 2: Lines selected, proceed to checkout
+          const selectedLines = getSelectedLinesFromModal();
           
           if (selectedLines.length === 0) {
             alert('Please select at least one line to add the service to.');
             return;
           }
           
-          // Populate checkout modal with selected service
-          populateCheckoutModal(selectedServiceId);
+          // Populate checkout modal with selected service and lines
+          const selectedServiceId = document.getElementById('serviceSelect').value;
+          const modalSelectedLines = getSelectedLinesFromModal();
+          populateCheckoutModal(selectedServiceId, modalSelectedLines);
           
           // Close add service modal and open checkout modal
           var addServiceModal = bootstrap.Modal.getInstance(document.getElementById('addServiceModal'));
@@ -2840,8 +2916,97 @@
           msdn: checkbox.closest('tr').querySelector('td:nth-child(3)').textContent
         }));
       }
+      
+      function populateLinesTable() {
+        const tbody = document.getElementById('linesTableBody');
+        tbody.innerHTML = '';
+        
+        // Get all lines from the main table
+        const lineRows = document.querySelectorAll('#linesTable tbody tr');
+        
+        lineRows.forEach(row => {
+          const lineId = row.dataset.lineId;
+          const lineName = row.querySelector('td:nth-child(2)').textContent;
+          const employeeName = row.querySelector('td:nth-child(3)').textContent;
+          const phoneNumber = row.querySelector('td:nth-child(4)').textContent;
+          const status = row.querySelector('td:nth-child(5)').textContent;
+          
+          // Only show active lines
+          if (status.trim() === 'Active') {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>
+                <input type="checkbox" class="form-check-input line-checkbox-modal" data-line-id="${lineId}">
+              </td>
+              <td>${lineName}</td>
+              <td>${employeeName}</td>
+              <td>${phoneNumber}</td>
+              <td><span class="badge bg-success">${status}</span></td>
+            `;
+            tbody.appendChild(tr);
+          }
+        });
+        
+        // Add event listeners for checkboxes
+        addLineSelectionListeners();
+      }
+      
+      function addLineSelectionListeners() {
+        // Select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAllLines');
+        const lineCheckboxes = document.querySelectorAll('.line-checkbox-modal');
+        
+        selectAllCheckbox.addEventListener('change', function() {
+          lineCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+          });
+          updateSelectedLinesCount();
+          updateNextButtonState();
+        });
+        
+        // Individual line checkboxes
+        lineCheckboxes.forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            updateSelectedLinesCount();
+            updateNextButtonState();
+            
+            // Update select all checkbox
+            const checkedCount = document.querySelectorAll('.line-checkbox-modal:checked').length;
+            const totalCount = lineCheckboxes.length;
+            selectAllCheckbox.checked = checkedCount === totalCount;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+          });
+        });
+      }
+      
+      function updateSelectedLinesCount() {
+        const selectedCount = document.querySelectorAll('.line-checkbox-modal:checked').length;
+        const countElement = document.getElementById('selectedCount');
+        const countContainer = document.getElementById('selectedLinesCount');
+        
+        countElement.textContent = selectedCount;
+        countContainer.style.display = selectedCount > 0 ? 'block' : 'none';
+      }
+      
+      function updateNextButtonState() {
+        const selectedCount = document.querySelectorAll('.line-checkbox-modal:checked').length;
+        const nextBtn = document.getElementById('nextBtn');
+        nextBtn.disabled = selectedCount === 0;
+      }
+      
+      function getSelectedLinesFromModal() {
+        const checkboxes = document.querySelectorAll('.line-checkbox-modal:checked');
+        return Array.from(checkboxes).map(checkbox => {
+          const row = checkbox.closest('tr');
+          return {
+            id: parseInt(checkbox.dataset.lineId),
+            name: row.querySelector('td:nth-child(2)').textContent,
+            msdn: row.querySelector('td:nth-child(3)').textContent
+          };
+        });
+      }
 
-      function populateCheckoutModal(serviceId) {
+      function populateCheckoutModal(serviceId, selectedLines) {
         const selectedService = availableServices.find(service => service.id == serviceId);
         if (!selectedService) return;
 
@@ -2858,14 +3023,43 @@
         document.getElementById('checkoutServiceTitle').textContent = selectedService.name;
         document.getElementById('checkoutServiceFeatures').textContent = features;
         document.getElementById('checkoutServicePrice').textContent = `$${selectedService.price}`;
-        document.getElementById('checkoutSubtotal').textContent = `$${selectedService.price.toFixed(2)}`;
-        document.getElementById('checkoutTaxes').textContent = `$${taxes.toFixed(2)}`;
-        document.getElementById('checkoutTotal').textContent = `$${total.toFixed(2)}`;
         
-        // Store selected service ID for order completion
+        // Display selected lines
+        const selectedLinesHtml = selectedLines.map(line => 
+          `<div class="mb-1">• ${line.name} (${line.msdn})</div>`
+        ).join('');
+        document.getElementById('checkoutSelectedLines').innerHTML = selectedLinesHtml;
+        
+        // Calculate total cost for all selected lines
+        const totalForAllLines = selectedService.price * selectedLines.length;
+        const taxesForAllLines = Math.round(totalForAllLines * 0.08 * 100) / 100;
+        const grandTotal = totalForAllLines + taxesForAllLines;
+        
+        document.getElementById('checkoutSubtotal').textContent = `$${totalForAllLines.toFixed(2)}`;
+        document.getElementById('checkoutTaxes').textContent = `$${taxesForAllLines.toFixed(2)}`;
+        document.getElementById('checkoutTotal').textContent = `$${grandTotal.toFixed(2)}`;
+        
+        // Store selected service ID and lines for order completion
         document.getElementById('checkoutModal').dataset.serviceId = serviceId;
+        document.getElementById('checkoutModal').dataset.selectedLines = JSON.stringify(selectedLines);
       }
 
+      // Back button in Add Service modal
+      document.getElementById('backBtn').addEventListener('click', function() {
+        if (addServiceModalStep === 2) {
+          // Go back to service selection
+          document.getElementById('lineSelection').style.display = 'none';
+          document.getElementById('serviceDetails').style.display = 'block';
+          
+          // Update buttons
+          document.getElementById('backBtn').style.display = 'none';
+          document.getElementById('nextBtn').textContent = 'Next';
+          document.getElementById('nextBtn').disabled = false;
+          
+          addServiceModalStep = 1;
+        }
+      });
+      
       // Back button in checkout modal
       document.getElementById('backToServiceBtn').addEventListener('click', function() {
         var checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
@@ -2880,7 +3074,8 @@
       // Complete order button
       document.getElementById('completeOrderBtn').addEventListener('click', async function() {
         const serviceId = document.getElementById('checkoutModal').dataset.serviceId;
-        const lineIds = selectedLines.map(line => line.id);
+        const selectedLinesData = JSON.parse(document.getElementById('checkoutModal').dataset.selectedLines || '[]');
+        const lineIds = selectedLinesData.map(line => line.id);
         
         if (!serviceId || lineIds.length === 0) {
           alert('Error: Missing service or line selection');
