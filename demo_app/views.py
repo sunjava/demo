@@ -162,9 +162,8 @@ def line_details(request, account_id, line_id):
     account = get_object_or_404(Account, id=account_id)
     line = get_object_or_404(Line, id=line_id, account=account)
     
-    # Get services for this line (you may need to create this model/relationship)
-    # For now, we'll use a placeholder - you can implement this based on your data model
-    line_services = []  # Placeholder - replace with actual service query
+    # Get services for this line
+    line_services = LineService.objects.filter(line=line).select_related('service').order_by('-activated_at')
     
     context = {
         'account': account,
