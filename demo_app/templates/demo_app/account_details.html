@@ -2832,6 +2832,19 @@
         document.getElementById('nextBtn').disabled = true;
         document.getElementById('selectedLinesCount').style.display = 'none';
         
+        // Reset select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAllLines');
+        if (selectAllCheckbox) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        }
+        
+        // Clear any existing modal checkboxes
+        const modalCheckboxes = document.querySelectorAll('.line-checkbox-modal');
+        modalCheckboxes.forEach(checkbox => {
+          checkbox.checked = false;
+        });
+        
         // Update modal title and button text based on pre-selected lines
         updateModalForPreSelectedLines();
       }
@@ -2989,6 +3002,13 @@
         const tbody = document.getElementById('linesTableBody');
         tbody.innerHTML = '';
         
+        // Reset select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAllLines');
+        if (selectAllCheckbox) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        }
+        
         // Get all lines from the main table
         const lineRows = document.querySelectorAll('#linesTable tbody tr');
         console.log('Found line rows:', lineRows.length);
@@ -3008,7 +3028,7 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td>
-                <input type="checkbox" class="form-check-input line-checkbox-modal" data-line-id="${lineId}">
+                <input type="checkbox" class="form-check-input line-checkbox-modal" data-line-id="${lineId}" checked="false">
               </td>
               <td>${lineName}</td>
               <td>${employeeName}</td>
@@ -3024,32 +3044,59 @@
         
         // Add event listeners for checkboxes
         addLineSelectionListeners();
+        
+        // Ensure all checkboxes start unchecked
+        const modalCheckboxes = tbody.querySelectorAll('.line-checkbox-modal');
+        modalCheckboxes.forEach(checkbox => {
+          checkbox.checked = false;
+        });
+        
+        // Reset counters
+        updateSelectedLinesCount();
+        updateNextButtonState();
       }
       
       function addLineSelectionListeners() {
-        // Select all checkbox
+        // Remove any existing event listeners to prevent duplicates
         const selectAllCheckbox = document.getElementById('selectAllLines');
         const lineCheckboxes = document.querySelectorAll('.line-checkbox-modal');
         
-        selectAllCheckbox.addEventListener('change', function() {
-          lineCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
+        // Clone and replace select all checkbox to remove old event listeners
+        if (selectAllCheckbox) {
+          const newSelectAllCheckbox = selectAllCheckbox.cloneNode(true);
+          selectAllCheckbox.parentNode.replaceChild(newSelectAllCheckbox, selectAllCheckbox);
+          
+          // Add new event listener
+          newSelectAllCheckbox.addEventListener('change', function() {
+            const currentLineCheckboxes = document.querySelectorAll('.line-checkbox-modal');
+            currentLineCheckboxes.forEach(checkbox => {
+              checkbox.checked = this.checked;
+            });
+            updateSelectedLinesCount();
+            updateNextButtonState();
           });
-          updateSelectedLinesCount();
-          updateNextButtonState();
-        });
+        }
         
         // Individual line checkboxes
         lineCheckboxes.forEach(checkbox => {
-          checkbox.addEventListener('change', function() {
+          // Clone and replace to remove old event listeners
+          const newCheckbox = checkbox.cloneNode(true);
+          checkbox.parentNode.replaceChild(newCheckbox, checkbox);
+          
+          // Add new event listener
+          newCheckbox.addEventListener('change', function() {
             updateSelectedLinesCount();
             updateNextButtonState();
             
             // Update select all checkbox
+            const currentLineCheckboxes = document.querySelectorAll('.line-checkbox-modal');
             const checkedCount = document.querySelectorAll('.line-checkbox-modal:checked').length;
-            const totalCount = lineCheckboxes.length;
-            selectAllCheckbox.checked = checkedCount === totalCount;
-            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+            const totalCount = currentLineCheckboxes.length;
+            
+            if (selectAllCheckbox) {
+              selectAllCheckbox.checked = checkedCount === totalCount;
+              selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+            }
           });
         });
       }
