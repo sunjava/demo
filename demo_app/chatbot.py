@@ -1008,7 +1008,7 @@ When users mention line identifiers, extract them carefully - they could be:
 
 IMPORTANT: Always ask for clarification when the user's request is ambiguous:
 - If they say "suspend a line" without specifying which one, ask them to specify the employee name, phone number, or line name
-- If they say "add a service" without specifying which service, open the Add Service modal for them to select
+- If they say "add a service" or "add service to lines" without specifying which service, call the add_service_to_lines function with an empty service_type to open the Add Service modal
 - If they say "upgrade a line" without specifying which one, ask them to specify the employee name, phone number, or line name
 - If multiple lines match their request, show them the options and ask them to be more specific
 - Never assume which line they want to suspend, upgrade, or which service they want to add - always ask for clarification
@@ -1020,7 +1020,7 @@ For line management operations:
 - If no specific lines are mentioned, you can suspend all active lines, restore all suspended lines, or reactivate all cancelled lines
 
 For service additions:
-- If users don't specify which service, open the Add Service modal for selection
+- If users say "add a service" or "add service to lines" without specifying which service, call the add_service_to_lines function with an empty service_type to open the Add Service modal
 - Always confirm the service type, duration, and cost before proceeding
 - Show pricing information: 1-day ($1), 10-day ($35), 30-day ($50)
 
@@ -1060,6 +1060,10 @@ Be helpful and confirm actions clearly. Maintain conversation context and refer 
                 function_name = message_response.function_call.name
                 function_args = json.loads(message_response.function_call.arguments)
                 
+                # Debug logging
+                logger.info(f"AI wants to call function: {function_name}")
+                logger.info(f"Function arguments: {function_args}")
+                
                 # Add account_id if not present
                 if 'account_id' not in function_args:
                     function_args['account_id'] = account_id
@@ -1067,6 +1071,9 @@ Be helpful and confirm actions clearly. Maintain conversation context and refer 
                 # Execute the function
                 if function_name in self.function_map:
                     function_result = self.function_map[function_name](**function_args)
+                    
+                    # Debug logging
+                    logger.info(f"Function result: {function_result}")
                     
                     # Generate response based on function result
                     return self._format_function_response(function_name, function_result, message_response.content)
