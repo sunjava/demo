@@ -747,46 +747,78 @@
         <div class="tab-content" id="accountTabsContent">
             <!-- Account Details Tab -->
             <div class="tab-pane fade show active" id="details" role="tabpanel">
-                <div class="account-attributes">
-                    <div class="row mb-2">
-                        <div class="col-md-4 mb-2">
-                            <div class="account-attr-label">Account Number</div>
-                            <div class="account-attr-value">{{ account.account_number }}</div>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <div class="account-attr-label">No. of lines</div>
-                            <div class="account-attr-value">{{ account.number_of_lines }}</div>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <div class="account-attr-label">Created On</div>
-                            <div class="account-attr-value">{{ account.created_on|date:"d M Y" }}</div>
-                        </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-md-4 mb-2">
-                            <div class="account-attr-label">Last Payment Date</div>
-                            <div class="account-attr-value">{{ account.last_payment_date|date:"d M Y"|default:"N/A" }}</div>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <div class="account-attr-label">Payment Due Date</div>
-                            <div class="account-attr-value">{{ account.payment_due_date|date:"d M Y"|default:"N/A" }}</div>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <div class="account-attr-label">Account Type</div>
-                            <div class="account-attr-value">{{ account.get_account_type_display }}</div>
-                        </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-md-4 mb-2">
-                            <div class="account-attr-label">Last Modified On</div>
-                            <div class="account-attr-value">{{ account.last_modified_on|date:"d M Y" }}</div>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <div class="account-attr-label">Status</div>
-                            <div class="account-attr-value status">{{ account.get_status_display }}</div>
-                        </div>
-                    </div>
-                </div>
+                                 <div class="account-attributes">
+                     <div class="d-flex justify-content-between align-items-center mb-3">
+                         <h6 class="mb-0" style="color: var(--tmobile-magenta); font-weight: 600;">Account Information</h6>
+                         <a href="#" class="add-autopay-link" style="color: var(--tmobile-magenta); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+                             Add to AutoPay
+                         </a>
+                     </div>
+                     <div class="row">
+                         <div class="col-md-6">
+                             <div class="row mb-2">
+                                 <div class="col-md-6 mb-2">
+                                     <div class="account-attr-label">Account Number</div>
+                                     <div class="account-attr-value">{{ account.account_number }}</div>
+                                 </div>
+                                 <div class="col-md-6 mb-2">
+                                     <div class="account-attr-label">No. of lines</div>
+                                     <div class="account-attr-value">{{ account.number_of_lines }}</div>
+                                 </div>
+                             </div>
+                             <div class="row mb-2">
+                                 <div class="col-md-6 mb-2">
+                                     <div class="account-attr-label">Created On</div>
+                                     <div class="account-attr-value">{{ account.created_on|date:"d M Y" }}</div>
+                                 </div>
+                                 <div class="col-md-6 mb-2">
+                                     <div class="account-attr-label">Account Type</div>
+                                     <div class="account-attr-value">{{ account.get_account_type_display }}</div>
+                                 </div>
+                             </div>
+                             <div class="row mb-2">
+                                 <div class="col-md-6 mb-2">
+                                     <div class="account-attr-label">Last Modified On</div>
+                                     <div class="account-attr-value">{{ account.last_modified_on|date:"d M Y" }}</div>
+                                 </div>
+                                 <div class="col-md-6 mb-2">
+                                     <div class="account-attr-label">Status</div>
+                                     <div class="account-attr-value status">{{ account.get_status_display }}</div>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="col-md-3">
+                             <div class="payment-attributes">
+                                 <div class="mb-3">
+                                     <div class="account-attr-label">Last Payment Date</div>
+                                     <div class="account-attr-value">{{ account.last_payment_date|date:"d M Y"|default:"N/A" }}</div>
+                                 </div>
+                                 <div class="mb-3">
+                                     <div class="account-attr-label">Payment Due Date</div>
+                                     <div class="account-attr-value">{{ account.payment_due_date|date:"d M Y"|default:"N/A" }}</div>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="col-md-3">
+                             <div class="payment-amounts">
+                                 <div class="mb-3">
+                                     <div class="account-attr-label">Amount Due</div>
+                                     <div class="account-attr-value">${{ account.amount_due|default:"0.00"|floatformat:2 }}</div>
+                                 </div>
+                                 <div class="mb-3">
+                                     <div class="account-attr-label">Due Immediately</div>
+                                     <div class="account-attr-value">${{ account.due_immediately|default:"0.00"|floatformat:2 }}</div>
+                                 </div>
+
+                                 <div class="mt-4">
+                                     <button class="btn pay-now-btn" style="background: var(--tmobile-magenta); color: white; border: none; border-radius: 2rem; padding: 0.75rem 1.5rem; font-weight: 600; width: 100%;">
+                                         Pay Now
+                                     </button>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
                 <!-- Lines Management Section -->
                 <div class="lines-section">
                     <div class="lines-header-bar">
