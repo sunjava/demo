@@ -2869,6 +2869,30 @@
         });
       }
       
+      // Function to force all modal checkboxes to be unchecked
+      function forceUncheckAllModalCheckboxes() {
+        const modalCheckboxes = document.querySelectorAll('.line-checkbox-modal');
+        const selectAllCheckbox = document.getElementById('selectAllLines');
+        
+        console.log(`Force unchecking ${modalCheckboxes.length} modal checkboxes`);
+        
+        modalCheckboxes.forEach(checkbox => {
+          checkbox.checked = false;
+          checkbox.removeAttribute('checked');
+          console.log(`Forced unchecked: ${checkbox.dataset.lineId}`);
+        });
+        
+        if (selectAllCheckbox) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+          console.log('Select all checkbox forced unchecked');
+        }
+        
+        // Update counters
+        updateSelectedLinesCount();
+        updateNextButtonState();
+      }
+      
       // Function to update modal title and button text based on pre-selected lines
       function updateModalForPreSelectedLines() {
         const modalTitle = document.getElementById('addServiceModalLabel');
@@ -2956,6 +2980,11 @@
               // Populate lines table
               populateLinesTable();
               
+              // Force uncheck all checkboxes after populating
+              setTimeout(() => {
+                forceUncheckAllModalCheckboxes();
+              }, 100);
+              
               // Update buttons
               document.getElementById('backBtn').style.display = 'inline-block';
               document.getElementById('nextBtn').textContent = 'Add Service';
@@ -3028,7 +3057,7 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td>
-                <input type="checkbox" class="form-check-input line-checkbox-modal" data-line-id="${lineId}" checked="false">
+                <input type="checkbox" class="form-check-input line-checkbox-modal" data-line-id="${lineId}">
               </td>
               <td>${lineName}</td>
               <td>${employeeName}</td>
@@ -3042,18 +3071,30 @@
         
         console.log('Total lines added to modal:', tbody.children.length);
         
-        // Add event listeners for checkboxes
-        addLineSelectionListeners();
-        
-        // Ensure all checkboxes start unchecked
+        // Force all checkboxes to be unchecked BEFORE adding event listeners
         const modalCheckboxes = tbody.querySelectorAll('.line-checkbox-modal');
         modalCheckboxes.forEach(checkbox => {
           checkbox.checked = false;
+          checkbox.removeAttribute('checked');
+          console.log(`Forced checkbox unchecked for line: ${checkbox.dataset.lineId}`);
         });
         
-        // Reset counters
-        updateSelectedLinesCount();
-        updateNextButtonState();
+        // Add event listeners for checkboxes
+        addLineSelectionListeners();
+        
+        // Double-check all checkboxes are still unchecked AFTER adding event listeners
+        const finalCheckboxes = tbody.querySelectorAll('.line-checkbox-modal');
+        finalCheckboxes.forEach(checkbox => {
+          if (checkbox.checked) {
+            console.log(`Checkbox still checked after event listeners, forcing unchecked: ${checkbox.dataset.lineId}`);
+            checkbox.checked = false;
+          }
+        });
+        
+        // Final force uncheck as a safety measure
+        forceUncheckAllModalCheckboxes();
+        
+        console.log('Final checkbox state - checked count:', tbody.querySelectorAll('.line-checkbox-modal:checked').length);
       }
       
       function addLineSelectionListeners() {
@@ -3064,6 +3105,9 @@
         // Clone and replace select all checkbox to remove old event listeners
         if (selectAllCheckbox) {
           const newSelectAllCheckbox = selectAllCheckbox.cloneNode(true);
+          // Ensure the new select all checkbox is unchecked
+          newSelectAllCheckbox.checked = false;
+          newSelectAllCheckbox.indeterminate = false;
           selectAllCheckbox.parentNode.replaceChild(newSelectAllCheckbox, selectAllCheckbox);
           
           // Add new event listener
@@ -3081,6 +3125,9 @@
         lineCheckboxes.forEach(checkbox => {
           // Clone and replace to remove old event listeners
           const newCheckbox = checkbox.cloneNode(true);
+          // Ensure the new checkbox is unchecked
+          newCheckbox.checked = false;
+          newCheckbox.removeAttribute('checked');
           checkbox.parentNode.replaceChild(newCheckbox, checkbox);
           
           // Add new event listener
