@@ -257,6 +257,45 @@
             .stat-label {
                 font-size: 0.8rem;
             }
+            
+            /* Breadcrumb Navigation */
+            .breadcrumb-section {
+                background: #fff;
+                padding: 1rem 0;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .breadcrumb {
+                background: transparent;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .breadcrumb-item {
+                font-size: 0.9rem;
+            }
+            
+            .breadcrumb-item a {
+                color: var(--tmobile-magenta);
+                text-decoration: none;
+                font-weight: 500;
+            }
+            
+            .breadcrumb-item a:hover {
+                color: #b8005a;
+                text-decoration: underline;
+            }
+            
+            .breadcrumb-item.active {
+                color: var(--tmobile-gray);
+                font-weight: 600;
+            }
+            
+            .breadcrumb-item + .breadcrumb-item::before {
+                content: ">";
+                color: var(--tmobile-gray);
+                margin: 0 0.5rem;
+            }
         }
     </style>
 </head>
@@ -273,6 +312,18 @@
                 <span class="tmobile-topbar-label">Profile</span>
                 <a href="/logout/" class="btn btn-outline-magenta">Logout</a>
             </div>
+        </div>
+    </div>
+    
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb-section">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard/">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">All Lines</li>
+                </ol>
+            </nav>
         </div>
     </div>
     
