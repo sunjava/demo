@@ -296,6 +296,31 @@
                 color: var(--tmobile-gray);
                 margin: 0 0.5rem;
             }
+            
+            /* Upgrade-specific styles */
+            .upgrade-line-btn {
+                background: #28a745;
+                color: white;
+                border: none;
+                transition: all 0.2s ease;
+            }
+            
+            .upgrade-line-btn:hover {
+                background: #218838;
+                color: white;
+                transform: scale(1.05);
+            }
+            
+            .upgrade-line-btn:disabled {
+                background: #6c757d;
+                cursor: not-allowed;
+                transform: none;
+            }
+            
+            .alert-info {
+                border-left: 4px solid #0dcaf0;
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            }
         }
     </style>
 </head>
@@ -320,7 +345,12 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard/">Home</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">All Lines</li>
+                    {% if action == 'upgrade' %}
+                        <li class="breadcrumb-item"><a href="/lines/">All Lines</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Upgrade Lines</li>
+                    {% else %}
+                        <li class="breadcrumb-item active" aria-current="page">All Lines</li>
+                    {% endif %}
                 </ol>
             </nav>
         </div>
@@ -333,6 +363,20 @@
         </a>
         
         <h1 class="page-title">{{ page_title }}</h1>
+        
+        {% if action == 'upgrade' %}
+        <!-- Upgrade Instructions -->
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem; color: #0dcaf0;"></i>
+                <div>
+                    <h6 class="alert-heading mb-2">Line Upgrade Process</h6>
+                    <p class="mb-2">Select a line below to begin the upgrade process. You can upgrade device, plan, or add protection services.</p>
+                    <small class="text-muted">Only active lines are eligible for upgrades. Suspended or cancelled lines cannot be upgraded.</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
         
         <!-- Search Box -->
         <div class="search-box">
@@ -444,9 +488,19 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="/accounts/{{ account.id }}/" class="btn btn-outline-primary btn-sm">
-                                                    <i class="bi bi-eye"></i> View
-                                                </a>
+                                                {% if action == 'upgrade' %}
+                                                    <button class="btn btn-success btn-sm upgrade-line-btn" 
+                                                            data-line-id="{{ line.id }}" 
+                                                            data-line-name="{{ line.line_name }}"
+                                                            data-account-id="{{ account.id }}"
+                                                            data-account-number="{{ account.account_number }}">
+                                                        <i class="bi bi-arrow-up-circle"></i> Upgrade
+                                                    </button>
+                                                {% else %}
+                                                    <a href="/accounts/{{ account.id }}/" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-eye"></i> View
+                                                    </a>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -477,6 +531,31 @@
             const accountFilter = document.getElementById('accountFilter');
             const clearFiltersBtn = document.getElementById('clearFilters');
             const lineRows = document.querySelectorAll('.line-row');
+            
+            // Handle upgrade button clicks
+            const upgradeButtons = document.querySelectorAll('.upgrade-line-btn');
+            upgradeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const lineId = this.dataset.lineId;
+                    const lineName = this.dataset.lineName;
+                    const accountId = this.dataset.accountId;
+                    const accountNumber = this.dataset.accountNumber;
+                    
+                    // Check if line is active (eligible for upgrade)
+                    const lineRow = this.closest('tr');
+                    const statusBadge = lineRow.querySelector('.badge');
+                    const lineStatus = statusBadge.textContent.trim();
+                    
+                    if (lineStatus !== 'ACTIVE') {
+                        alert(`Line "${lineName}" cannot be upgraded. Only active lines are eligible for upgrades.`);
+                        return;
+                    }
+                    
+                    // Navigate to upgrade flow (you can customize this URL)
+                    const upgradeUrl = `/accounts/${accountId}/lines/${lineId}/upgrade/`;
+                    window.location.href = upgradeUrl;
+                });
+            });
             const accountGroups = document.querySelectorAll('.account-group-container');
             
             function filterLines() {

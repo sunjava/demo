@@ -96,8 +96,9 @@ def all_lines(request):
     # Get unique accounts for the filter dropdown
     unique_accounts = Account.objects.values_list('account_number', flat=True).distinct().order_by('account_number')
     
-    # Get status filter from URL parameter
+    # Get status filter and action from URL parameters
     status_filter = request.GET.get('status', '')
+    action = request.GET.get('action', '')
     
     # Calculate filtered line count based on status
     if status_filter == 'ACTIVE':
@@ -113,6 +114,10 @@ def all_lines(request):
         filtered_count = total_lines
         page_title = f"All Lines by Account ({filtered_count})"
     
+    # Handle special actions
+    if action == 'upgrade':
+        page_title = f"Select Line to Upgrade ({filtered_count})"
+    
     context = {
         'accounts_with_lines': accounts_with_lines,
         'total_lines': total_lines,
@@ -121,6 +126,7 @@ def all_lines(request):
         'cancelled_lines': cancelled_lines,
         'unique_accounts': unique_accounts,
         'status_filter': status_filter,
+        'action': action,
         'page_title': page_title,
         'filtered_count': filtered_count,
     }
