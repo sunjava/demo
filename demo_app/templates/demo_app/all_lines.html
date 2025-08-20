@@ -317,6 +317,26 @@
                 transform: none;
             }
             
+            /* Add Service-specific styles */
+            .add-service-line-btn {
+                background: #007bff;
+                color: white;
+                border: none;
+                transition: all 0.2s ease;
+            }
+            
+            .add-service-line-btn:hover {
+                background: #0056b3;
+                color: white;
+                transform: scale(1.05);
+            }
+            
+            .add-service-line-btn:disabled {
+                background: #6c757d;
+                cursor: not-allowed;
+                transform: none;
+            }
+            
             .alert-info {
                 border-left: 4px solid #0dcaf0;
                 background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
@@ -348,6 +368,9 @@
                     {% if action == 'upgrade' %}
                         <li class="breadcrumb-item"><a href="/lines/">All Lines</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Upgrade Lines</li>
+                    {% elif action == 'add_service' %}
+                        <li class="breadcrumb-item"><a href="/lines/">All Lines</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Add Service</li>
                     {% else %}
                         <li class="breadcrumb-item active" aria-current="page">All Lines</li>
                     {% endif %}
@@ -373,6 +396,18 @@
                     <h6 class="alert-heading mb-2">Line Upgrade Process</h6>
                     <p class="mb-2">Select a line below to begin the upgrade process. You can upgrade device, plan, or add protection services.</p>
                     <small class="text-muted">Only active lines are eligible for upgrades. Suspended or cancelled lines cannot be upgraded.</small>
+                </div>
+            </div>
+        </div>
+        {% elif action == 'add_service' %}
+        <!-- Add Service Instructions -->
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem; color: #0dcaf0;"></i>
+                <div>
+                    <h6 class="alert-heading mb-2">Add Service Process</h6>
+                    <p class="mb-2">Select a line below to add new services like international passes, data packages, or premium features.</p>
+                    <small class="text-muted">Only active lines are eligible for new services. Suspended or cancelled lines cannot have services added.</small>
                 </div>
             </div>
         </div>
@@ -496,6 +531,14 @@
                                                             data-account-number="{{ account.account_number }}">
                                                         <i class="bi bi-arrow-up-circle"></i> Upgrade
                                                     </button>
+                                                {% elif action == 'add_service' %}
+                                                    <button class="btn btn-primary btn-sm add-service-line-btn" 
+                                                            data-line-id="{{ line.id }}" 
+                                                            data-line-name="{{ line.line_name }}"
+                                                            data-account-id="{{ account.id }}"
+                                                            data-account-number="{{ account.account_number }}">
+                                                        <i class="bi bi-plus-circle"></i> Add Service
+                                                    </button>
                                                 {% else %}
                                                     <a href="/accounts/{{ account.id }}/" class="btn btn-outline-primary btn-sm">
                                                         <i class="bi bi-eye"></i> View
@@ -554,6 +597,31 @@
                     // Navigate to upgrade flow (you can customize this URL)
                     const upgradeUrl = `/accounts/${accountId}/lines/${lineId}/upgrade/`;
                     window.location.href = upgradeUrl;
+                });
+            });
+            
+            // Handle add service button clicks
+            const addServiceButtons = document.querySelectorAll('.add-service-line-btn');
+            addServiceButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const lineId = this.dataset.lineId;
+                    const lineName = this.dataset.lineName;
+                    const accountId = this.dataset.accountId;
+                    const accountNumber = this.dataset.accountNumber;
+                    
+                    // Check if line is active (eligible for services)
+                    const lineRow = this.closest('tr');
+                    const statusBadge = lineRow.querySelector('.badge');
+                    const lineStatus = statusBadge.textContent.trim();
+                    
+                    if (lineStatus !== 'ACTIVE') {
+                        alert(`Line "${lineName}" cannot have services added. Only active lines are eligible for new services.`);
+                        return;
+                    }
+                    
+                    // Navigate to add service flow (you can customize this URL)
+                    const addServiceUrl = `/accounts/${accountId}/lines/${lineId}/add-service/`;
+                    window.location.href = addServiceUrl;
                 });
             });
             const accountGroups = document.querySelectorAll('.account-group-container');

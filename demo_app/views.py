@@ -117,6 +117,8 @@ def all_lines(request):
     # Handle special actions
     if action == 'upgrade':
         page_title = f"Select Line to Upgrade ({filtered_count})"
+    elif action == 'add_service':
+        page_title = f"Select Line to Add Service ({filtered_count})"
     
     context = {
         'accounts_with_lines': accounts_with_lines,
