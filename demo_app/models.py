@@ -64,6 +64,20 @@ class Account(models.Model):
         self.status = new_status
         self.save()
 
+    def _unpaid_balance(self, statuses):
+        total = Decimal('0.00')
+        for statement in self.billing_statements.filter(status__in=statuses):
+            total += statement.remaining_balance
+        return total
+
+    @property
+    def amount_due(self):
+        return self._unpaid_balance(['UNPAID', 'PAST_DUE'])
+
+    @property
+    def due_immediately(self):
+        return self._unpaid_balance(['PAST_DUE'])
+
 
 class Service(models.Model):
     """Service model representing available services like International Passes"""
@@ -165,3 +179,75 @@ class LineService(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+
+
+class BillingStatement(models.Model):
+    """Monthly billing statement for an account"""
+
+    STATUS_CHOICES = [
+        ('PAID', 'Paid'),
+        ('UNPAID', 'Unpaid'),
+        ('PAST_DUE', 'Past Due'),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='billing_statements')
+    period_start = models.DateField()
+    period_end = models.DateField()
+    statement_date = models.DateField()
+    due_date = models.DateField()
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='UNPAID')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Statement {self.account.account_number} {self.period_start}–{self.period_end}"
+
+    @property
+    def remaining_balance(self):
+        remaining = self.total_amount - self.amount_paid
+        return remaining if remaining > 0 else Decimal('0.00')
+
+    def refresh_status(self):
+        """Mark unpaid statements past due when the due date has passed."""
+        from datetime import date
+        if self.status != 'PAID' and self.remaining_balance > 0 and self.due_date < date.today():
+            self.status = 'PAST_DUE'
+            self.save(update_fields=['status'])
+        return self.status
+
+    def mark_paid(self, payment_date=None):
+        from datetime import date
+        self.amount_paid = self.total_amount
+        self.status = 'PAID'
+        self.save(update_fields=['amount_paid', 'status'])
+        return payment_date or date.today()
+
+    class Meta:
+        ordering = ['-period_start']
+        unique_together = ('account', 'period_start')
+
+
+class BillingLineItem(models.Model):
+    """A charge line on a billing statement"""
+
+    CATEGORY_CHOICES = [
+        ('PLAN', 'Plan'),
+        ('PROTECTION', 'Protection'),
+        ('SERVICE', 'Service'),
+        ('TAX', 'Tax'),
+    ]
+
+    statement = models.ForeignKey(BillingStatement, on_delete=models.CASCADE, related_name='line_items')
+    line = models.ForeignKey(Line, on_delete=models.SET_NULL, null=True, blank=True, related_name='billing_line_items')
+    description = models.CharField(max_length=255)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.description} ({self.amount})"
+
+    class Meta:
+        ordering = ['id']

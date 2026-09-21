@@ -253,6 +253,13 @@ class Command(BaseCommand):
                             )
                             self.stdout.write(f'    Added service: {service.name}')
 
+        from demo_app.billing import generate_billing_statements
+        billing_result = generate_billing_statements(recreate=False)
+        self.stdout.write(self.style.SUCCESS(
+            f"Generated {billing_result['created']} billing statement(s) "
+            f"({billing_result['skipped']} already existed)"
+        ))
+
         self.stdout.write(self.style.SUCCESS(f'\nExtended sample data creation completed!'))
         self.stdout.write(self.style.SUCCESS(f'Created {accounts_created} new accounts'))
         self.stdout.write(self.style.SUCCESS(f'Total accounts in database: {Account.objects.count()}'))

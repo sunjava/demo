@@ -136,6 +136,12 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f'Line already exists: {line.line_name} - {line.msdn}')
 
+        from demo_app.billing import generate_billing_statements
+        billing_result = generate_billing_statements(Account.objects.filter(id=account.id), recreate=True)
+        self.stdout.write(self.style.SUCCESS(
+            f"Generated {billing_result['created']} billing statement(s) for account {account.account_number}"
+        ))
+
         self.stdout.write(self.style.SUCCESS('\nSample data creation completed!'))
         self.stdout.write(self.style.SUCCESS('\nTo test the application:'))
         self.stdout.write(self.style.SUCCESS('1. Run migrations: python manage.py migrate'))

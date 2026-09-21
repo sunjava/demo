@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -11,7 +12,7 @@ import json
 import uuid
 from datetime import timedelta
 
-from .models import Account, Line, Service, LineService
+from .models import Account, Line, Service, LineService, BillingStatement
 from .chatbot import chatbot
 
 # Create your views here.
@@ -137,8 +138,19 @@ def all_lines(request):
 @login_required
 def account_details(request, account_id):
     """Display account details with lines loaded from database"""
-    account = get_object_or_404(Account, id=account_id)
+    account = get_object_or_404(
+        Account.objects.prefetch_related(
+            Prefetch(
+                'billing_statements',
+                queryset=BillingStatement.objects.prefetch_related('line_items__line'),
+            )
+        ),
+        id=account_id,
+    )
     lines = account.lines.all().order_by('line_name')
+    billing_statements = list(account.billing_statements.all())
+    for statement in billing_statements:
+        statement.refresh_status()
     
     # Track recently viewed accounts in session with timestamps
     recently_viewed_data = request.session.get('recently_viewed_accounts', {})
@@ -160,7 +172,8 @@ def account_details(request, account_id):
     context = {
         'account': account,
         'lines': lines,
-        'account_id': account_id
+        'account_id': account_id,
+        'billing_statements': billing_statements,
     }
     return render(request, 'demo_app/account_details.html', context)
 
@@ -811,6 +824,55 @@ def update_account_status(request):
             }
         })
         
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def pay_account_balance(request):
+    """Mark all unpaid and past-due statements as paid."""
+    try:
+        data = json.loads(request.body)
+        account_id = data.get('account_id')
+
+        if not account_id:
+            return JsonResponse({'error': 'Account ID is required'}, status=400)
+
+        account = get_object_or_404(Account, id=account_id)
+        unpaid_statements = list(
+            account.billing_statements.filter(status__in=['UNPAID', 'PAST_DUE'])
+        )
+
+        if not unpaid_statements:
+            return JsonResponse({
+                'success': True,
+                'message': 'No balance due',
+                'amount_due': 0,
+                'due_immediately': 0,
+                'last_payment_date': account.last_payment_date.isoformat() if account.last_payment_date else None,
+                'statements_paid': 0,
+            })
+
+        from datetime import date
+        payment_date = date.today()
+        for statement in unpaid_statements:
+            statement.mark_paid(payment_date)
+
+        account.last_payment_date = payment_date
+        account.save(update_fields=['last_payment_date'])
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{len(unpaid_statements)} statement(s) paid successfully',
+            'amount_due': float(account.amount_due),
+            'due_immediately': float(account.due_immediately),
+            'last_payment_date': account.last_payment_date.isoformat(),
+            'statements_paid': len(unpaid_statements),
+        })
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:

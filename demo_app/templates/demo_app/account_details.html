@@ -54,6 +54,54 @@
             color: #111;
             font-weight: bold;
         }
+        .billing-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .billing-toolbar h6 {
+            color: var(--tmobile-magenta);
+            font-weight: 600;
+            margin: 0;
+        }
+        .billing-table thead th {
+            color: var(--tmobile-gray);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            border-bottom-color: #eee;
+        }
+        .billing-status {
+            display: inline-block;
+            border-radius: 2rem;
+            padding: 0.2rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .billing-status-paid { background: #e8f6ee; color: #1b7a3d; }
+        .billing-status-unpaid { background: #fff4e5; color: #b86b00; }
+        .billing-status-past_due { background: #fde8ef; color: #b8005a; }
+        .billing-toggle {
+            color: var(--tmobile-magenta);
+            background: none;
+            border: none;
+            font-weight: 600;
+            padding: 0;
+        }
+        .billing-items td {
+            background: #fafafa;
+        }
+        .billing-items-table {
+            margin: 0;
+            font-size: 0.92rem;
+        }
+        .pay-now-btn:disabled {
+            background: #e9ecef !important;
+            color: #6c757d !important;
+            cursor: not-allowed;
+        }
         /* Lines Table */
         .lines-section {
             background: #fff;
@@ -848,11 +896,11 @@
                              <div class="payment-attributes">
                                  <div class="mb-3">
                                      <div class="account-attr-label">Last Payment Date</div>
-                                     <div class="account-attr-value">{{ account.last_payment_date|date:"d M Y"|default:"N/A" }}</div>
+                                     <div class="account-attr-value" id="lastPaymentDateValue">{{ account.last_payment_date|date:"d M Y"|default:"N/A" }}</div>
                                  </div>
                                  <div class="mb-3">
                                      <div class="account-attr-label">Payment Due Date</div>
-                                     <div class="account-attr-value">{{ account.payment_due_date|date:"d M Y"|default:"N/A" }}</div>
+                                     <div class="account-attr-value" id="paymentDueDateValue">{{ account.payment_due_date|date:"d M Y"|default:"N/A" }}</div>
                                  </div>
                              </div>
                          </div>
@@ -860,15 +908,15 @@
                              <div class="payment-amounts">
                                  <div class="mb-3">
                                      <div class="account-attr-label">Amount Due</div>
-                                     <div class="account-attr-value">${{ account.amount_due|default:"0.00"|floatformat:2 }}</div>
+                                     <div class="account-attr-value" id="amountDueValue">${{ account.amount_due|default:"0.00"|floatformat:2 }}</div>
                                  </div>
                                  <div class="mb-3">
                                      <div class="account-attr-label">Due Immediately</div>
-                                     <div class="account-attr-value">${{ account.due_immediately|default:"0.00"|floatformat:2 }}</div>
+                                     <div class="account-attr-value" id="dueImmediatelyValue">${{ account.due_immediately|default:"0.00"|floatformat:2 }}</div>
                                  </div>
 
                                  <div class="mt-4">
-                                     <button class="btn pay-now-btn" style="background: var(--tmobile-magenta); color: white; border: none; border-radius: 2rem; padding: 0.75rem 1.5rem; font-weight: 600; width: 100%;">
+                                     <button class="btn pay-now-btn" id="payNowBtn" data-account-id="{{ account.id }}" {% if account.amount_due <= 0 %}disabled{% endif %} style="background: var(--tmobile-magenta); color: white; border: none; border-radius: 2rem; padding: 0.75rem 1.5rem; font-weight: 600; width: 100%;">
                                          Pay Now
                                      </button>
                                  </div>
@@ -1013,7 +1061,86 @@
             </div>
             <!-- Other Tabs Placeholder -->
             <div class="tab-pane fade" id="billing" role="tabpanel">
-                <div class="text-center py-5">Billing Statements content coming soon.</div>
+                <div class="billing-toolbar">
+                    <div>
+                        <h6>Billing Statements</h6>
+                        <div class="text-muted small">Monthly charges for plans, protection, and add-on services.</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="account-attr-label">Current Amount Due</div>
+                        <div class="account-attr-value">${{ account.amount_due|default:"0.00"|floatformat:2 }}</div>
+                    </div>
+                </div>
+                {% if billing_statements %}
+                <div class="table-responsive">
+                    <table class="table billing-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>Statement Date</th>
+                                <th>Due Date</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Paid</th>
+                                <th class="text-end">Remaining</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for statement in billing_statements %}
+                            <tr>
+                                <td>{{ statement.period_start|date:"M Y" }}</td>
+                                <td>{{ statement.statement_date|date:"d M Y" }}</td>
+                                <td>{{ statement.due_date|date:"d M Y" }}</td>
+                                <td class="text-end">${{ statement.total_amount|floatformat:2 }}</td>
+                                <td class="text-end">${{ statement.amount_paid|floatformat:2 }}</td>
+                                <td class="text-end">${{ statement.remaining_balance|floatformat:2 }}</td>
+                                <td>
+                                    <span class="billing-status billing-status-{{ statement.status|lower }}">{{ statement.get_status_display }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="billing-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#statement-items-{{ statement.id }}" aria-expanded="false">
+                                        Details
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="billing-items">
+                                <td colspan="8" class="p-0 border-0">
+                                    <div class="collapse" id="statement-items-{{ statement.id }}">
+                                        <table class="table billing-items-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Description</th>
+                                                    <th>Category</th>
+                                                    <th>Line</th>
+                                                    <th class="text-end">Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in statement.line_items.all %}
+                                                <tr>
+                                                    <td>{{ item.description }}</td>
+                                                    <td>{{ item.get_category_display }}</td>
+                                                    <td>{% if item.line %}{{ item.line.line_name }}{% else %}—{% endif %}</td>
+                                                    <td class="text-end">${{ item.amount|floatformat:2 }}</td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="4" class="text-muted">No charges for this period.</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">No billing statements have been generated for this account yet.</div>
+                {% endif %}
             </div>
             <div class="tab-pane fade" id="reports" role="tabpanel">
                 <div class="text-center py-5">Reports content coming soon.</div>
@@ -1024,6 +1151,37 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const payNowBtn = document.getElementById('payNowBtn');
+        if (!payNowBtn) return;
+        payNowBtn.addEventListener('click', async function() {
+          if (payNowBtn.disabled) return;
+          const accountId = payNowBtn.dataset.accountId;
+          payNowBtn.disabled = true;
+          payNowBtn.textContent = 'Processing...';
+          try {
+            const response = await fetch('/api/accounts/pay/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ account_id: parseInt(accountId, 10) })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+              window.location.reload();
+            } else {
+              alert(data.error || 'Payment could not be processed.');
+              payNowBtn.disabled = false;
+              payNowBtn.textContent = 'Pay Now';
+            }
+          } catch (error) {
+            alert('Payment could not be processed.');
+            payNowBtn.disabled = false;
+            payNowBtn.textContent = 'Pay Now';
+          }
+        });
+      });
+    </script>
 
     <!-- Edit Payment Date Modal -->
     <div class="modal fade" id="editPaymentDateModal" tabindex="-1" aria-labelledby="editPaymentDateModalLabel" aria-hidden="true">
