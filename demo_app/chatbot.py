@@ -761,10 +761,10 @@ def _find_lines(account: Account, line_identifiers: Optional[List[str]] = None, 
 
 
 class AITMobileChatbot:
-    """AI-powered T-Mobile chatbot using OpenAI function calling"""
+    """AI-powered T-Mobile chatbot using a LangGraph agent."""
     
     def __init__(self):
-        self.client = openai.OpenAI(api_key=getattr(settings, 'OPENAI_API_KEY', None))
+        # Tools stay in this module; LangGraph wraps them.
         
         # Define available functions for OpenAI
         self.functions = [
@@ -959,7 +959,18 @@ class AITMobileChatbot:
             "upgrade_line": upgrade_line
         }
     
-    def process_message(self, message: str, account_id: int, conversation_history: List[Dict] = None) -> Dict[str, Any]:
+    def process_message(self, message: str, account_id: int, conversation_history: List[Dict] = None, thread_id: str = None, resume: str = None) -> Dict[str, Any]:
+        """Process a chat turn with the LangGraph agent (HITL on writes)."""
+        from .langgraph_agent import process_message as run_langgraph_agent
+        return run_langgraph_agent(
+            message=message or "",
+            account_id=account_id,
+            conversation_history=conversation_history,
+            thread_id=thread_id,
+            resume=resume,
+        )
+
+    def _legacy_process_message(self, message: str, account_id: int, conversation_history: List[Dict] = None) -> Dict[str, Any]:
         """
         Process user message using OpenAI with function calling
         

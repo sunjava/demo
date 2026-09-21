@@ -247,3 +247,38 @@ def generate_billing_statements(accounts=None, months_back=PAID_MONTHS, recreate
         'skipped': skipped_count,
         'accounts': accounts.count() if hasattr(accounts, 'count') else len(list(accounts)),
     }
+
+
+def pay_outstanding_statements(account):
+    """Pay all unpaid and past-due statements on an account."""
+    unpaid_statements = list(
+        account.billing_statements.filter(status__in=['UNPAID', 'PAST_DUE'])
+    )
+    if not unpaid_statements:
+        return {
+            'success': True,
+            'message': 'No balance due',
+            'amount_due': 0.0,
+            'due_immediately': 0.0,
+            'last_payment_date': account.last_payment_date.isoformat() if account.last_payment_date else None,
+            'statements_paid': 0,
+            'total_paid': 0.0,
+        }
+
+    payment_date = date.today()
+    total_paid = Decimal('0.00')
+    for statement in unpaid_statements:
+        total_paid += statement.remaining_balance
+        statement.mark_paid(payment_date)
+
+    account.last_payment_date = payment_date
+    account.save(update_fields=['last_payment_date'])
+    return {
+        'success': True,
+        'message': f'{len(unpaid_statements)} statement(s) paid successfully',
+        'amount_due': float(account.amount_due),
+        'due_immediately': float(account.due_immediately),
+        'last_payment_date': account.last_payment_date.isoformat(),
+        'statements_paid': len(unpaid_statements),
+        'total_paid': float(total_paid),
+    }

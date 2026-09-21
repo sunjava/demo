@@ -567,6 +567,29 @@
             background: var(--tmobile-magenta);
             color: white;
         }
+        .chat-confirm-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+        }
+        .chat-confirm-btn, .chat-cancel-btn {
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.3rem 0.9rem;
+            cursor: pointer;
+        }
+        .chat-confirm-btn {
+            background: var(--tmobile-magenta);
+            color: white;
+            border: 1px solid var(--tmobile-magenta);
+        }
+        .chat-cancel-btn {
+            background: white;
+            color: var(--tmobile-magenta);
+            border: 1px solid var(--tmobile-magenta);
+        }
         
         /* Add a Line Modal Styles */
         .progress-container {
@@ -3966,6 +3989,12 @@
         let currentAccountId = parseInt('{{ account.id }}');
         let conversationHistory = [];
         let currentEditingLineId = null;
+        const chatbotThreadStorageKey = `chatThread-${currentAccountId}`;
+        let chatbotThreadId = sessionStorage.getItem(chatbotThreadStorageKey);
+        if (!chatbotThreadId) {
+            chatbotThreadId = `account-${currentAccountId}-session-${(crypto.randomUUID && crypto.randomUUID()) || String(Date.now())}`;
+            sessionStorage.setItem(chatbotThreadStorageKey, chatbotThreadId);
+        }
 
         // Toggle chatbot
         chatbotToggle.addEventListener('click', function() {
@@ -4037,32 +4066,41 @@
             }
         });
 
-        async function sendMessage() {
-            const message = chatbotInput.value.trim();
-            if (!message) return;
+        async function sendMessage(options = {}) {
+            const resume = options.resume || null;
+            const message = resume ? '' : chatbotInput.value.trim();
+            if (!resume && !message) return;
 
-            // Add user message to chat
-            addMessage(message, 'user');
-            chatbotInput.value = '';
-            chatbotInput.style.height = 'auto';
+            if (!resume) {
+                document.querySelectorAll('.chatbot-confirmation button').forEach(btn => {
+                    btn.disabled = true;
+                });
+                addMessage(message, 'user');
+                chatbotInput.value = '';
+                chatbotInput.style.height = 'auto';
+                conversationHistory.push({ role: 'user', content: message });
+            } else {
+                addMessage(resume === 'approve' ? 'Confirmed' : 'Cancelled', 'system');
+            }
 
-            // Store message in conversation history
-            conversationHistory.push({ role: 'user', content: message });
-
-            // Show typing indicator
             const typingIndicator = addTypingIndicator();
 
             try {
+                const payload = {
+                    message: message,
+                    account_id: currentAccountId,
+                    conversation_history: conversationHistory,
+                    thread_id: chatbotThreadId
+                };
+                if (resume) {
+                    payload.resume = resume;
+                }
                 const response = await fetch('/api/chatbot/message/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        message: message,
-                        account_id: currentAccountId,
-                        conversation_history: conversationHistory
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
@@ -4070,6 +4108,11 @@
                 // Debug logging
                 console.log('Chatbot response data:', data);
                 console.log('Trigger modal:', data.trigger_modal);
+
+                if (data.thread_id) {
+                    chatbotThreadId = data.thread_id;
+                    sessionStorage.setItem(chatbotThreadStorageKey, chatbotThreadId);
+                }
                 
                 // Remove typing indicator
                 typingIndicator.remove();
@@ -4081,8 +4124,9 @@
                     // Store assistant response in conversation history
                     conversationHistory.push({ role: 'assistant', content: data.response });
                     
-                    // If there was a tool action, show system message
-                    if (data.tool_result) {
+                    if (data.pending_confirmation) {
+                        addConfirmationCard(data.pending_confirmation);
+                    } else if (data.tool_result) {
                         addMessage(data.tool_result, 'system');
                         conversationHistory.push({ role: 'system', content: data.tool_result });
                     }
@@ -4142,6 +4186,40 @@
                 typingIndicator.remove();
                 addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
             }
+        }
+
+        function addConfirmationCard(pending) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message system chatbot-confirmation';
+            const preview = document.createElement('div');
+            preview.textContent = pending.preview || 'Confirm this action?';
+            const actions = document.createElement('div');
+            actions.className = 'chat-confirm-actions';
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.type = 'button';
+            confirmBtn.className = 'chat-confirm-btn';
+            confirmBtn.textContent = 'Confirm';
+            confirmBtn.addEventListener('click', function() {
+                messageDiv.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                sendMessage({ resume: 'approve' });
+            });
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.className = 'chat-cancel-btn';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.addEventListener('click', function() {
+                messageDiv.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                sendMessage({ resume: 'reject' });
+            });
+
+            actions.appendChild(confirmBtn);
+            actions.appendChild(cancelBtn);
+            messageDiv.appendChild(preview);
+            messageDiv.appendChild(actions);
+            chatbotMessages.appendChild(messageDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
         }
 
         function addMessage(text, sender) {

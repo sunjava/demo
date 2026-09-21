@@ -14,6 +14,7 @@ from datetime import timedelta
 
 from .models import Account, Line, Service, LineService, BillingStatement
 from .chatbot import chatbot
+from .billing import pay_outstanding_statements
 
 # Create your views here.
 
@@ -843,35 +844,14 @@ def pay_account_balance(request):
             return JsonResponse({'error': 'Account ID is required'}, status=400)
 
         account = get_object_or_404(Account, id=account_id)
-        unpaid_statements = list(
-            account.billing_statements.filter(status__in=['UNPAID', 'PAST_DUE'])
-        )
-
-        if not unpaid_statements:
-            return JsonResponse({
-                'success': True,
-                'message': 'No balance due',
-                'amount_due': 0,
-                'due_immediately': 0,
-                'last_payment_date': account.last_payment_date.isoformat() if account.last_payment_date else None,
-                'statements_paid': 0,
-            })
-
-        from datetime import date
-        payment_date = date.today()
-        for statement in unpaid_statements:
-            statement.mark_paid(payment_date)
-
-        account.last_payment_date = payment_date
-        account.save(update_fields=['last_payment_date'])
-
+        result = pay_outstanding_statements(account)
         return JsonResponse({
             'success': True,
-            'message': f'{len(unpaid_statements)} statement(s) paid successfully',
-            'amount_due': float(account.amount_due),
-            'due_immediately': float(account.due_immediately),
-            'last_payment_date': account.last_payment_date.isoformat(),
-            'statements_paid': len(unpaid_statements),
+            'message': result.get('message'),
+            'amount_due': result.get('amount_due', 0),
+            'due_immediately': result.get('due_immediately', 0),
+            'last_payment_date': result.get('last_payment_date'),
+            'statements_paid': result.get('statements_paid', 0),
         })
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
@@ -889,8 +869,15 @@ def chatbot_message(request):
         message = data.get('message', '').strip()
         account_id = data.get('account_id')
         conversation_history = data.get('conversation_history', [])
-        
-        if not message or not account_id:
+        thread_id = data.get('thread_id')
+        resume = data.get('resume')
+
+        if resume and resume not in ('approve', 'reject'):
+            return JsonResponse({'error': 'resume must be approve or reject'}, status=400)
+
+        if not account_id:
+            return JsonResponse({'error': 'account_id is required'}, status=400)
+        if not message and resume not in ('approve', 'reject'):
             return JsonResponse({'error': 'Message and account_id are required'}, status=400)
         
         # Validate account exists
@@ -899,8 +886,13 @@ def chatbot_message(request):
         except Account.DoesNotExist:
             return JsonResponse({'error': 'Account not found'}, status=404)
         
-        # Process message with chatbot (pass conversation history for context)
-        result = chatbot.process_message(message, account_id, conversation_history)
+        result = chatbot.process_message(
+            message,
+            account_id,
+            conversation_history,
+            thread_id=thread_id,
+            resume=resume,
+        )
         
         return JsonResponse({
             'response': result.get('response', ''),
@@ -909,6 +901,8 @@ def chatbot_message(request):
             'trigger_modal': result.get('trigger_modal'),
             'line_to_mirror': result.get('line_to_mirror'),
             'line_to_mirror_data': result.get('line_to_mirror_data'),
+            'thread_id': result.get('thread_id') or thread_id,
+            'pending_confirmation': result.get('pending_confirmation'),
             'success': True
         })
         
