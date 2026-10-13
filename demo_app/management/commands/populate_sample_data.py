@@ -142,6 +142,12 @@ class Command(BaseCommand):
             f"Generated {billing_result['created']} billing statement(s) for account {account.account_number}"
         ))
 
+        from demo_app.sap import generate_sap_orders
+        sap_result = generate_sap_orders(recreate=True)
+        self.stdout.write(self.style.SUCCESS(
+            f"Generated {sap_result['created']} mock SAP order(s)"
+        ))
+
         self.stdout.write(self.style.SUCCESS('\nSample data creation completed!'))
         self.stdout.write(self.style.SUCCESS('\nTo test the application:'))
         self.stdout.write(self.style.SUCCESS('1. Run migrations: python manage.py migrate'))

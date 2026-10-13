@@ -171,6 +171,14 @@
             background: #fff3e0;
             color: #f57c00;
         }
+        .badge-pending_shipment {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .badge-shipped {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
                          .badge-cancelled {
             background: #ffebee;
             color: #d32f2f;
@@ -423,6 +431,8 @@
                                          <select class="form-control search-input" id="statusFilter">
                          <option value="">All Statuses</option>
                          <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active</option>
+                         <option value="PENDING_SHIPMENT" {% if status_filter == 'PENDING_SHIPMENT' %}selected{% endif %}>Shipment</option>
+                         <option value="SHIPPED" {% if status_filter == 'SHIPPED' %}selected{% endif %}>Shipped</option>
                          <option value="SUSPENDED" {% if status_filter == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
                          <option value="CANCELLED" {% if status_filter == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
                      </select>
@@ -488,7 +498,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for line in account.lines.all|dictsort:"line_name" %}
+                                        {% for line in account.lines.all %}
                                         <tr class="line-row" 
                                             data-line-name="{{ line.line_name|lower }}"
                                             data-msdn="{{ line.msdn|lower }}"
@@ -511,7 +521,7 @@
                                             </td>
                                             <td>
                                                 <span class="badge badge-{{ line.status|lower }}">
-                                                    {{ line.status }}
+                                                    {{ line.get_status_display }}
                                                 </span>
                                             </td>
                                             <td>{{ line.added_on|date:"M d, Y" }}</td>

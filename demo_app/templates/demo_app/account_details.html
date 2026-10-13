@@ -54,6 +54,18 @@
             color: #111;
             font-weight: bold;
         }
+        .line-status {
+            display: inline-block;
+            border-radius: 2rem;
+            padding: 0.2rem 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .line-status-active { background: #e8f6ee; color: #1b7a3d; }
+        .line-status-suspended { background: #fff4e5; color: #b86b00; }
+        .line-status-cancelled { background: #fde8ef; color: #b8005a; }
+        .line-status-pending_shipment { background: #fff4e5; color: #b86b00; }
+        .line-status-shipped { background: #e8f0fe; color: #1a73e8; }
         .billing-toolbar {
             display: flex;
             justify-content: space-between;
@@ -101,6 +113,88 @@
             background: #e9ecef !important;
             color: #6c757d !important;
             cursor: not-allowed;
+        }
+        .history-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .history-chip {
+            border: 1px solid #eee;
+            background: #fff;
+            color: var(--tmobile-gray);
+            border-radius: 2rem;
+            padding: 0.25rem 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .history-chip.active {
+            background: var(--tmobile-magenta);
+            color: #fff;
+            border-color: var(--tmobile-magenta);
+        }
+        .history-type {
+            display: inline-block;
+            border-radius: 2rem;
+            padding: 0.2rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #f4e8f0;
+            color: var(--tmobile-magenta);
+            white-space: nowrap;
+        }
+        .history-type-payment, .history-type-statement { background: #e8f6ee; color: #1b7a3d; }
+        .history-type-service_added { background: #fff4e5; color: #b86b00; }
+        .history-type-suspended { background: #fde8ef; color: #b8005a; }
+        .report-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        .report-bar-track {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .report-bar {
+            height: 100%;
+            background: var(--tmobile-magenta);
+            border-radius: 4px;
+        }
+        .report-bar-paid {
+            background: #1b7a3d;
+            margin-top: 4px;
+        }
+        .report-snapshot {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+        .report-stat {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+        }
+        .report-stat .label {
+            color: var(--tmobile-gray);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .report-stat .value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .report-grid, .report-snapshot { grid-template-columns: 1fr; }
         }
         /* Lines Table */
         .lines-section {
@@ -839,7 +933,10 @@
                     <span class="tmobile-title">ABC Limited</span>
                 </a>
             </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/sap/warehouse/" class="btn btn-outline-primary btn-sm">SAP Warehouse</a>
             <button class="add-line-btn" id="addLineBtn">ADD A LINE</button>
+            </div>
         </div>
     </div>
     
@@ -1022,6 +1119,8 @@
                                     <div class="search-filters">
                                         <button class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="all">All</button>
                                         <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="active">Active</button>
+                                        <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="shipment">Shipment</button>
+                                        <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="shipped">Shipped</button>
                                         <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="suspended">Suspended</button>
                                     </div>
                                 </div>
@@ -1061,8 +1160,13 @@
                                     <td>{{ line.employee_number }}</td>
                                     <td>{{ line.added_on|date:"d M Y" }}</td>
                                     <td>{{ line.payment_due_date|date:"d M Y"|default:"N/A" }}</td>
-                                    <td><span class="account-attr-value">{{ line.get_status_display }}</span></td>
+                                    <td><span class="line-status line-status-{{ line.status|lower }}">{{ line.get_status_display }}</span></td>
                                     <td>
+                                        {% if line.status == 'SHIPPED' %}
+                                        <button class="btn btn-success btn-sm activate-line-btn" data-line-id="{{ line.id }}">
+                                            Activate
+                                        </button>
+                                        {% endif %}
                                         <button class="btn btn-outline-primary btn-sm edit-line-btn" 
                                                 data-line-id="{{ line.id }}" 
                                                 data-line-name="{{ line.line_name }}" 
@@ -1166,10 +1270,171 @@
                 {% endif %}
             </div>
             <div class="tab-pane fade" id="reports" role="tabpanel">
-                <div class="text-center py-5">Reports content coming soon.</div>
+                <div class="billing-toolbar">
+                    <div>
+                        <h6>Reports</h6>
+                        <div class="text-muted small">Spend, lines, and add-ons summarized from billing and line data.</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="account-attr-label">Current Amount Due</div>
+                        <div class="account-attr-value">${{ reports.amount_due|default:"0.00"|floatformat:2 }}</div>
+                        <div class="account-attr-label mt-1">Due Immediately</div>
+                        <div class="text-muted">${{ reports.due_immediately|default:"0.00"|floatformat:2 }}</div>
+                    </div>
+                </div>
+                <div class="report-card">
+                    <h6 class="mb-3" style="color: var(--tmobile-magenta); font-weight: 600;">Account snapshot</h6>
+                    <div class="report-snapshot">
+                        {% for row in reports.snapshot %}
+                        <div class="report-stat">
+                            <div class="label">{{ row.label }}</div>
+                            <div class="value">{{ row.count }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-muted small mt-2">{{ reports.total_lines }} line{{ reports.total_lines|pluralize }} on this account.</div>
+                </div>
+                <div class="report-grid">
+                    <div class="report-card">
+                        <h6 class="mb-3" style="color: var(--tmobile-magenta); font-weight: 600;">Monthly billed vs paid</h6>
+                        {% if reports.monthly %}
+                        <table class="table billing-table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Period</th>
+                                    <th class="text-end">Billed</th>
+                                    <th class="text-end">Paid</th>
+                                    <th style="width:40%">Share</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in reports.monthly %}
+                                <tr>
+                                    <td>{{ row.label }}</td>
+                                    <td class="text-end">${{ row.total|floatformat:2 }}</td>
+                                    <td class="text-end">${{ row.paid|floatformat:2 }}</td>
+                                    <td>
+                                        <div class="report-bar-track" title="Billed">
+                                            <div class="report-bar" style="width: {{ row.billed_pct }}%;"></div>
+                                        </div>
+                                        <div class="report-bar-track report-bar-paid" title="Paid" style="height:6px;">
+                                            <div class="report-bar report-bar-paid" style="width: {{ row.paid_pct }}%; height:6px;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="text-muted">No billing statements yet.</div>
+                        {% endif %}
+                    </div>
+                    <div class="report-card">
+                        <h6 class="mb-3" style="color: var(--tmobile-magenta); font-weight: 600;">Charges by category</h6>
+                        {% if reports.categories %}
+                        <table class="table billing-table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-end">Amount</th>
+                                    <th style="width:40%">Share</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in reports.categories %}
+                                <tr>
+                                    <td>{{ row.label }}</td>
+                                    <td class="text-end">${{ row.amount|floatformat:2 }}</td>
+                                    <td>
+                                        <div class="report-bar-track">
+                                            <div class="report-bar" style="width: {{ row.pct }}%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="text-muted">No charges to summarize yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="report-card">
+                    <h6 class="mb-3" style="color: var(--tmobile-magenta); font-weight: 600;">Charges by line</h6>
+                    {% if reports.by_line %}
+                    <table class="table billing-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th>Employee</th>
+                                <th class="text-end">Amount</th>
+                                <th style="width:30%">Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in reports.by_line %}
+                            <tr>
+                                <td>{{ row.line_name }}</td>
+                                <td>{{ row.employee_name }}</td>
+                                <td class="text-end">${{ row.amount|floatformat:2 }}</td>
+                                <td>
+                                    <div class="report-bar-track">
+                                        <div class="report-bar" style="width: {{ row.pct }}%;"></div>
+                                    </div>
+                                </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="text-muted">No per-line charges yet.</div>
+                    {% endif %}
+                </div>
             </div>
             <div class="tab-pane fade" id="history" role="tabpanel">
-                <div class="text-center py-5">Account History content coming soon.</div>
+                <div class="billing-toolbar">
+                    <div>
+                        <h6>Account History</h6>
+                        <div class="text-muted small">Payments, new lines, dispatch, activation, suspend/restore, and add-on services.</div>
+                    </div>
+                    <div class="history-filters">
+                        <button type="button" class="history-chip active" data-history-filter="all">All</button>
+                        <button type="button" class="history-chip" data-history-filter="payments">Payments</button>
+                        <button type="button" class="history-chip" data-history-filter="lines">Lines</button>
+                        <button type="button" class="history-chip" data-history-filter="services">Services</button>
+                    </div>
+                </div>
+                {% if history_events %}
+                <div class="table-responsive">
+                    <table class="table billing-table align-middle mb-0" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Line</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in history_events %}
+                            <tr class="history-row" data-history-group="{{ event.filter_group }}">
+                                <td>{{ event.occurred_at|date:"d M Y H:i" }}</td>
+                                <td>
+                                    <span class="history-type history-type-{{ event.event_type|lower }}">{{ event.get_event_type_display }}</span>
+                                </td>
+                                <td>{{ event.summary }}</td>
+                                <td>{% if event.line %}{{ event.line.line_name }}{% else %}—{% endif %}</td>
+                                <td class="text-end">{% if event.amount %}${{ event.amount|floatformat:2 }}{% else %}—{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div id="historyEmptyFilter" class="text-center py-4 text-muted" style="display:none;">No events in this filter.</div>
+                {% else %}
+                <div class="text-center py-5 text-muted">No account history yet.</div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -1177,7 +1442,7 @@
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const payNowBtn = document.getElementById('payNowBtn');
-        if (!payNowBtn) return;
+        if (payNowBtn) {
         payNowBtn.addEventListener('click', async function() {
           if (payNowBtn.disabled) return;
           const accountId = payNowBtn.dataset.accountId;
@@ -1202,6 +1467,26 @@
             payNowBtn.disabled = false;
             payNowBtn.textContent = 'Pay Now';
           }
+        });
+        }
+        const historyChips = document.querySelectorAll('.history-chip');
+        const historyRows = document.querySelectorAll('.history-row');
+        const historyEmpty = document.getElementById('historyEmptyFilter');
+        historyChips.forEach(function(chip) {
+          chip.addEventListener('click', function() {
+            historyChips.forEach(function(other) { other.classList.remove('active'); });
+            chip.classList.add('active');
+            const filter = chip.dataset.historyFilter;
+            let visible = 0;
+            historyRows.forEach(function(row) {
+              const show = filter === 'all' || row.dataset.historyGroup === filter;
+              row.style.display = show ? '' : 'none';
+              if (show) visible += 1;
+            });
+            if (historyEmpty) {
+              historyEmpty.style.display = visible ? 'none' : '';
+            }
+          });
         });
       });
     </script>
@@ -2399,7 +2684,7 @@
         </div>
         <div class="chatbot-messages" id="chatbotMessages">
             <div class="message system">
-                Welcome! I can help you manage your lines and services. Try commands like:
+                Welcome! I can help you manage your lines, billing, and device orders. Try commands like:
             </div>
             <div class="chatbot-suggestions">
                 <span class="suggestion-chip" data-suggestion="add service to lines">Add a service</span>
@@ -2408,6 +2693,8 @@
                 <span class="suggestion-chip" data-suggestion="Add a new line to this account">Add A Line</span>
                 <span class="suggestion-chip" data-suggestion="Mirror an existing line">Mirror a Line</span>
                 <span class="suggestion-chip" data-suggestion="Upgrade existing lines">Upgrade Lines</span>
+                <span class="suggestion-chip" data-suggestion="What's my amount due?">Explain my bill</span>
+                <span class="suggestion-chip" data-suggestion="Where is my device?">Where is my device?</span>
             </div>
         </div>
         <div class="chatbot-input-area">
@@ -2989,7 +3276,7 @@
             // Show success message
             showComingSoonModal(
               'Line Mirrored Successfully!', 
-              `Your new line "${data.line.line_name}" for ${data.line.employee_name} has been created with the same settings as ${data.line.mirrored_from.line_name}.`
+              `Your new line "${data.line.line_name}" for ${data.line.employee_name} has been created with the same settings as ${data.line.mirrored_from.line_name}. Status is Shipment until SAP dispatch and activation.`
             );
             
             // Refresh the page to show the new line
@@ -3741,9 +4028,9 @@
           
           // Check if row matches filter
           let matchesFilter = true;
-          if (filter === 'active' && status !== 'active') {
-            matchesFilter = false;
-          } else if (filter === 'suspended' && status !== 'suspended') {
+          if (filter === 'all' || !filter) {
+            matchesFilter = true;
+          } else if (status.trim() !== filter) {
             matchesFilter = false;
           }
           
@@ -5300,7 +5587,7 @@
                     setTimeout(() => {
                         showComingSoonModal(
                             'Line Created Successfully!', 
-                            `Your new line has been created successfully!\n\nLine Details:\n• Phone Number: ${data.line.msdn}\n• Employee: ${data.line.employee_name}\n• Device: ${data.line.device_details}\n• Plan: ${data.line.plan_name}\n\nYou will receive confirmation via SMS and email. Device will be shipped within 2-3 business days.`
+                            `Your new line has been created successfully!\n\nLine Details:\n• Phone Number: ${data.line.msdn}\n• Employee: ${data.line.employee_name}\n• Device: ${data.line.device_details}\n• Plan: ${data.line.plan_name}\n\nStatus is Shipment. It will show as Shipped after SAP dispatch, then Active after you activate the device.`
                         );
                         
                         // Navigate back to account summary to show the new line
@@ -5495,6 +5782,29 @@
               const employeeName = this.dataset.employeeName;
               const employeeNumber = this.dataset.employeeNumber;
               editLineDetails(lineId, lineName, employeeName, employeeNumber);
+            });
+          });
+          document.querySelectorAll('.activate-line-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+              const lineId = this.dataset.lineId;
+              this.disabled = true;
+              try {
+                const response = await fetch('/api/lines/activate/', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ line_id: parseInt(lineId, 10) })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                  window.location.reload();
+                } else {
+                  alert(data.error || 'Could not activate this line.');
+                  this.disabled = false;
+                }
+              } catch (error) {
+                alert('Could not activate this line. Please try again.');
+                this.disabled = false;
+              }
             });
           });
         });

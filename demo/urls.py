@@ -24,7 +24,7 @@ from demo_app.views import (
     get_services, add_service_to_lines, get_line_services, get_account_lines,
     suspend_lines, restore_lines, chatbot_message, create_line, update_account_status,
     add_line_account_selection, update_line_payment_date, update_line_details, create_mirrored_line,
-    get_line_details, logo_test, pay_account_balance
+    get_line_details, logo_test, pay_account_balance, activate_line, sap_warehouse, sap_dispatch
 )
 
 urlpatterns = [
@@ -39,6 +39,7 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('signup/', signup_view, name='signup'),
+    path('sap/warehouse/', sap_warehouse, name='sap_warehouse'),
     
     # API endpoints
     path('api/services/', get_services, name='get_services'),
@@ -48,6 +49,7 @@ urlpatterns = [
     path('api/lines/suspend/', suspend_lines, name='suspend_lines'),
     path('api/lines/restore/', restore_lines, name='restore_lines'),
     path('api/lines/create/', create_line, name='create_line'),
+    path('api/lines/activate/', activate_line, name='activate_line'),
     path('api/lines/mirror/', create_mirrored_line, name='create_mirrored_line'),
     path('api/lines/<int:line_id>/details/', get_line_details, name='get_line_details'),
     path('api/lines/update-payment-date/', update_line_payment_date, name='update_line_payment_date'),
@@ -55,6 +57,7 @@ urlpatterns = [
     path('api/chatbot/message/', chatbot_message, name='chatbot_message'),
     path('api/accounts/update-status/', update_account_status, name='update_account_status'),
     path('api/accounts/pay/', pay_account_balance, name='pay_account_balance'),
+    path('api/sap/dispatch/', sap_dispatch, name='sap_dispatch'),
     path('logo-test/', logo_test, name='logo_test'),
 ]
 # Serve static files in development

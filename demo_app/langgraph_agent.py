@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-from contextvars import ContextVar
 from typing import Any, Callable, Dict, List, Optional
 
 from django.conf import settings
@@ -16,6 +15,7 @@ from langgraph.types import Command, interrupt
 from langgraph.errors import GraphInterrupt
 
 from . import chatbot as chatbot_tools
+from .agents.context import current_account_id
 from .billing import pay_outstanding_statements
 from .models import Account
 
@@ -26,12 +26,11 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-_current_account_id: ContextVar[Optional[int]] = ContextVar("account_id", default=None)
-
 _checkpointer = MemorySaver()
 _agent = None
 
 SYSTEM_PROMPT = """You are a helpful T-Mobile customer service assistant for the current account.
+You are the only agent that talks to the customer. Two specialists work behind you; they return facts, and you rewrite those facts in plain language.
 
 Available services:
 - 1_day: 1 Day International Pass ($1, 512MB data)
@@ -39,13 +38,14 @@ Available services:
 - 30_day: 30 Day International Pass ($50, 15GB data)
 - international_pass: Any international pass (will choose best option)
 
-You can:
-1. Add services to specific lines or all lines
-2. List all lines in the account
-3. Get account summary and statistics
-4. Suspend, restore, or reactivate lines
-5. Add, mirror, or upgrade lines (opens a modal)
-6. Pay the outstanding bill
+Route questions:
+- Bill, amount due, due immediately, due date, taxes, statement, line items, "why was I charged", payment guidance → ask_billing_agent.
+- Device dispatched, order status, shipping, ETA, "when will it ship", "where is my device" → ask_sap_agent (read-only). Only Shipment lines have dispatch/ETA. If SAP returns a pending order, the device has not shipped yet. Never tell the customer it was already dispatched unless the specialist says it is Shipped or dispatched=true. You cannot mark a device as dispatched; warehouse staff do that in SAP. Do not mention Active lines.
+- Activate a shipped device/line → activate_shipped_lines (only after SAP dispatch; Shipment lines cannot be activated).
+- List/suspend/restore/reactivate lines, add/mirror/upgrade line, add a service → your existing line tools.
+- Pay the bill → pay_account (never let a specialist take payment).
+
+You may say you checked billing or the order/dispatch system. Never mention MCP, specialists by internal name, or tools.
 
 When users mention line identifiers, extract them carefully - they could be employee names, phone numbers, line names, or employee numbers.
 
@@ -53,14 +53,16 @@ If a request is ambiguous, call the tool anyway; the tool will ask for clarifica
 
 If the user says "add a service" without naming which pass, call add_service_to_lines with an empty service_type so the Add Service modal opens.
 
-Write actions (suspend, restore, reactivate, adding a named service, paying the bill) are confirmed in the UI after you call the tool. Call the tool rather than asking them to type yes/no. Do not claim the write already succeeded until a tool result says it did.
+Write actions (suspend, restore, reactivate, activate a shipped line, adding a named service, paying the bill) are confirmed in the UI after you call the tool. Call the tool rather than asking them to type yes/no. Do not claim the write already succeeded until a tool result says it did.
+
+If ask_sap_agent reports the order/dispatch system is unavailable, tell the customer you could not reach that system right now.
 
 account_id is injected automatically; you do not need to ask for it.
 """
 
 
 def _account_id() -> int:
-    account_id = _current_account_id.get()
+    account_id = current_account_id.get()
     if not account_id:
         raise ValueError("Account ID is not set for this chatbot turn")
     return account_id
@@ -193,6 +195,33 @@ def reactivate_cancelled_lines(line_identifiers: Optional[List[str]] = None) -> 
 
 
 @tool
+def activate_shipped_lines(line_identifiers: Optional[List[str]] = None) -> dict:
+    """Activate a shipped line after SAP dispatch. Shipment lines cannot be activated yet."""
+    identifiers = _as_list(line_identifiers)
+    account = Account.objects.get(id=_account_id())
+    if identifiers:
+        candidates = chatbot_tools._find_lines(account, identifiers)
+        shipped = [line for line in candidates if line.status == 'SHIPPED']
+        if not shipped:
+            statuses = ", ".join(sorted({line.get_status_display() for line in candidates})) or "none"
+            return {
+                "success": False,
+                "error": f"Only Shipped lines can be activated. Found: {statuses}",
+            }
+    else:
+        shipped = list(account.lines.filter(status='SHIPPED'))
+        if not shipped:
+            return {"success": False, "error": "No shipped lines found to activate."}
+    lines_label = ", ".join(identifiers) if identifiers else ", ".join(line.line_name for line in shipped)
+    preview = f"Activate {lines_label}. Status will change from Shipped to Active. Confirm to continue."
+    return _confirm_then(
+        "activate_shipped_lines",
+        preview,
+        lambda: chatbot_tools.activate_shipped_lines(_account_id(), identifiers),
+    )
+
+
+@tool
 def pay_account() -> dict:
     """Pay all unpaid and past-due billing statements for this account."""
     account = Account.objects.get(id=_account_id())
@@ -213,6 +242,22 @@ def pay_account() -> dict:
     )
 
 
+@tool
+def ask_billing_agent(question: str) -> dict:
+    """Ask the billing specialist about amount due, statements, taxes, line items, or why a bill is high. Read-only; does not take payment."""
+    from .agents.billing_agent import run_billing_agent
+
+    return run_billing_agent(question, _account_id())
+
+
+@tool
+def ask_sap_agent(question: str) -> dict:
+    """Ask the SAP order specialist whether a device has been dispatched and when it will ship."""
+    from .agents.sap_agent import run_sap_agent
+
+    return run_sap_agent(question, _account_id())
+
+
 TOOLS = [
     list_account_lines,
     get_account_summary,
@@ -220,10 +265,13 @@ TOOLS = [
     suspend_lines,
     restore_lines,
     reactivate_cancelled_lines,
+    activate_shipped_lines,
     add_line_to_account,
     mirror_line,
     upgrade_line,
     pay_account,
+    ask_billing_agent,
+    ask_sap_agent,
 ]
 
 
@@ -284,6 +332,26 @@ def _format_result(function_name: str, tool_result: Dict[str, Any], fallback: st
     if tool_result.get("cancelled"):
         return {
             "response": "Cancelled. No changes were made.",
+            "tool_result": None,
+            "refresh_needed": False,
+        }
+
+    if function_name in ("ask_billing_agent", "ask_sap_agent"):
+        return {
+            "response": fallback or tool_result.get("summary") or "Here is what I found.",
+            "tool_result": None,
+            "refresh_needed": False,
+        }
+
+    if function_name == "activate_shipped_lines":
+        if tool_result.get("lines_activated"):
+            return {
+                "response": fallback or f"Activated {tool_result.get('lines_activated')} line(s).",
+                "tool_result": "\n".join(tool_result.get("results") or []),
+                "refresh_needed": True,
+            }
+        return {
+            "response": tool_result.get("error") or fallback or "No shipped lines were activated.",
             "tool_result": None,
             "refresh_needed": False,
         }
@@ -380,7 +448,7 @@ def process_message(
 
     thread_id = thread_id or f"account-{account_id}"
     config = {"configurable": {"thread_id": thread_id}}
-    token = _current_account_id.set(account_id)
+    token = current_account_id.set(account_id)
 
     try:
         agent = _get_agent()
@@ -450,4 +518,4 @@ def process_message(
             "pending_confirmation": None,
         }
     finally:
-        _current_account_id.reset(token)
+        current_account_id.reset(token)

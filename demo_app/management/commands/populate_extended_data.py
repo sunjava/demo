@@ -260,6 +260,13 @@ class Command(BaseCommand):
             f"({billing_result['skipped']} already existed)"
         ))
 
+        from demo_app.sap import generate_sap_orders
+        sap_result = generate_sap_orders(recreate=False)
+        self.stdout.write(self.style.SUCCESS(
+            f"Generated {sap_result['created']} mock SAP order(s) "
+            f"({sap_result['skipped']} already existed)"
+        ))
+
         self.stdout.write(self.style.SUCCESS(f'\nExtended sample data creation completed!'))
         self.stdout.write(self.style.SUCCESS(f'Created {accounts_created} new accounts'))
         self.stdout.write(self.style.SUCCESS(f'Total accounts in database: {Account.objects.count()}'))

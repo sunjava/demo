@@ -267,9 +267,21 @@ def pay_outstanding_statements(account):
 
     payment_date = date.today()
     total_paid = Decimal('0.00')
+    from .history import record_event
     for statement in unpaid_statements:
-        total_paid += statement.remaining_balance
+        remaining = statement.remaining_balance
+        total_paid += remaining
         statement.mark_paid(payment_date)
+        period_label = statement.period_start.strftime('%b %Y')
+        record_event(
+            account,
+            'PAYMENT',
+            f'Payment of ${remaining} for {period_label}',
+            amount=remaining,
+            reference=f'payment:statement:{statement.id}',
+            occurred_at=payment_date,
+            dedupe=True,
+        )
 
     account.last_payment_date = payment_date
     account.save(update_fields=['last_payment_date'])

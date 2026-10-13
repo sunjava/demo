@@ -104,6 +104,23 @@
         .line-attr-value.suspended {
             color: #dc3545;
         }
+
+        .line-attr-value.pending_shipment {
+            color: #b86b00;
+        }
+
+        .line-attr-value.shipped {
+            color: #1a73e8;
+        }
+
+        .activate-line-btn {
+            background: var(--tmobile-magenta);
+            color: #fff;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.5rem 1.25rem;
+            font-weight: 600;
+        }
         
         .services-section {
             background: #fff;
@@ -354,7 +371,7 @@
                 </div>
                 <div class="line-attr-item">
                     <div class="line-attr-label">Status</div>
-                    <div class="line-attr-value status {% if line.status == 'suspended' %}suspended{% endif %}">
+                    <div class="line-attr-value status {% if line.status == 'SUSPENDED' %}suspended{% elif line.status == 'PENDING_SHIPMENT' %}pending_shipment{% elif line.status == 'SHIPPED' %}shipped{% endif %}">
                         {{ line.get_status_display }}
                     </div>
                 </div>
@@ -385,7 +402,12 @@
         <div class="container">
             <div class="services-header">
                 <h2 class="services-title">Services</h2>
-                <button class="add-service-btn">Add Service</button>
+                <div>
+                    {% if line.status == 'SHIPPED' %}
+                    <button class="activate-line-btn" id="activateLineBtn" data-line-id="{{ line.id }}">Activate Line</button>
+                    {% endif %}
+                    <button class="add-service-btn">Add Service</button>
+                </div>
             </div>
             
             {% if line_services %}
@@ -752,6 +774,30 @@
         }
       }
       
+      const activateBtn = document.getElementById('activateLineBtn');
+      if (activateBtn) {
+        activateBtn.addEventListener('click', async function() {
+          this.disabled = true;
+          try {
+            const response = await fetch('/api/lines/activate/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ line_id: parseInt(this.dataset.lineId, 10) })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+              location.reload();
+            } else {
+              alert(data.error || 'Could not activate this line.');
+              this.disabled = false;
+            }
+          } catch (error) {
+            alert('Could not activate this line. Please try again.');
+            this.disabled = false;
+          }
+        });
+      }
+
       // Get CSRF token from cookies
       function getCookie(name) {
         let cookieValue = null;

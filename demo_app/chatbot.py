@@ -15,6 +15,7 @@ import uuid
 
 import openai
 from .models import Account, Line, Service, LineService
+from .history import describe_line, record_event
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -102,6 +103,16 @@ def add_service_to_lines(account_id: int, service_type: Optional[str] = None, li
                 payment_method='AI Assistant',
                 transaction_id=str(uuid.uuid4())[:8].upper()
             )
+            record_event(
+                line.account,
+                'SERVICE_ADDED',
+                f'{service.name} added to {describe_line(line)}',
+                line=line,
+                amount=total_amount,
+                reference=f'lineservice:{line_service.id}',
+                occurred_at=line_service.created_at,
+                dedupe=True,
+            )
             
             results.append(f"✅ {line.line_name}: {service.name} added successfully (${total_amount})")
             successful_additions += 1
@@ -135,7 +146,7 @@ def list_account_lines(account_id: int, status_filter: Optional[str] = None) -> 
     """
     try:
         account = get_object_or_404(Account, id=account_id)
-        lines = account.lines.all()
+        lines = account.lines.all().order_by('-added_on', '-id')
         
         if status_filter:
             lines = lines.filter(status__icontains=status_filter.upper())
@@ -263,6 +274,13 @@ def suspend_lines(account_id: int, line_identifiers: Optional[List[str]] = None)
                 line = all_active_lines.first()
                 line.status = 'SUSPENDED'
                 line.save()
+                record_event(
+                    account,
+                    'SUSPENDED',
+                    f'{describe_line(line)} suspended',
+                    line=line,
+                    reference=f'line:{line.id}:suspended:{timezone.now().isoformat()}',
+                )
                 
                 return {
                     "success": True,
@@ -347,6 +365,13 @@ def suspend_lines(account_id: int, line_identifiers: Optional[List[str]] = None)
             try:
                 line.status = 'SUSPENDED'
                 line.save()
+                record_event(
+                    account,
+                    'SUSPENDED',
+                    f'{describe_line(line)} suspended',
+                    line=line,
+                    reference=f'line:{line.id}:suspended:{timezone.now().isoformat()}',
+                )
                 
                 results.append(f"✅ {line.line_name} ({line.msdn}): Suspended successfully")
                 successful_suspensions += 1
@@ -439,6 +464,13 @@ def restore_lines(account_id: int, line_identifiers: Optional[List[str]] = None)
         for line in suspended_lines:
             line.status = 'ACTIVE'
             line.save()
+            record_event(
+                account,
+                'RESTORED',
+                f'{describe_line(line)} restored',
+                line=line,
+                reference=f'line:{line.id}:restored:{timezone.now().isoformat()}',
+            )
             
             results.append(f"✅ {line.line_name} ({line.msdn}): Restored successfully")
             successful_restorations += 1
@@ -528,6 +560,13 @@ def reactivate_cancelled_lines(account_id: int, line_identifiers: Optional[List[
                 line.status = 'ACTIVE'
                 line.cancelled_on = None  # Clear cancellation date
                 line.save()
+                record_event(
+                    account,
+                    'REACTIVATED',
+                    f'{describe_line(line)} reactivated',
+                    line=line,
+                    reference=f'line:{line.id}:reactivated:{timezone.now().isoformat()}',
+                )
                 
                 results.append(f"✅ {line.line_name} ({line.msdn}): Reactivated successfully")
                 successful_reactivations += 1
@@ -546,6 +585,43 @@ def reactivate_cancelled_lines(account_id: int, line_identifiers: Optional[List[
         
     except Exception as e:
         logger.error(f"Error reactivating cancelled lines: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def activate_shipped_lines(account_id: int, line_identifiers: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Activate one or more shipped lines after SAP dispatch."""
+    try:
+        account = get_object_or_404(Account, id=account_id)
+        if not line_identifiers:
+            lines = _find_lines(account, status_filter='SHIPPED')
+        else:
+            lines = _find_lines(account, line_identifiers)
+
+        if not lines:
+            return {"success": False, "error": "No shipped lines found to activate."}
+
+        shipped_lines = [line for line in lines if line.status == 'SHIPPED']
+        if not shipped_lines:
+            statuses = ", ".join(sorted({line.get_status_display() for line in lines}))
+            return {
+                "success": False,
+                "error": f"Only Shipped lines can be activated. Found: {statuses}",
+            }
+
+        results = []
+        activated = 0
+        for line in shipped_lines:
+            if line.activate_device():
+                results.append(f"{line.line_name} ({line.msdn}): Activated successfully")
+                activated += 1
+        return {
+            "success": True,
+            "results": results,
+            "lines_activated": activated,
+            "account_id": account_id,
+        }
+    except Exception as e:
+        logger.error(f"Error activating shipped lines: {str(e)}")
         return {"success": False, "error": str(e)}
 
 
@@ -954,6 +1030,7 @@ class AITMobileChatbot:
             "suspend_lines": suspend_lines,
             "restore_lines": restore_lines,
             "reactivate_cancelled_lines": reactivate_cancelled_lines,
+            "activate_shipped_lines": activate_shipped_lines,
             "add_line_to_account": add_line_to_account,
             "mirror_line": mirror_line,
             "upgrade_line": upgrade_line
@@ -1268,6 +1345,15 @@ Last Modified: {result['last_modified']}"""
         elif function_name == "reactivate_cancelled_lines":
             response = f"✅ Successfully reactivated {result['lines_reactivated']} line(s)"
             tool_result = "\n".join(result["results"])
+            return {
+                "response": response,
+                "tool_result": tool_result,
+                "refresh_needed": True
+            }
+
+        elif function_name == "activate_shipped_lines":
+            response = f"✅ Successfully activated {result['lines_activated']} line(s)"
+            tool_result = "\n".join(result.get("results") or [])
             return {
                 "response": response,
                 "tool_result": tool_result,

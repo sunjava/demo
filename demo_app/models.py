@@ -109,6 +109,8 @@ class Line(models.Model):
     """Line model representing individual phone lines"""
     
     STATUS_CHOICES = [
+        ('PENDING_SHIPMENT', 'Shipment'),
+        ('SHIPPED', 'Shipped'),
         ('ACTIVE', 'Active'),
         ('SUSPENDED', 'Suspended'),
         ('CANCELLED', 'Cancelled'),
@@ -141,9 +143,26 @@ class Line(models.Model):
     
     def __str__(self):
         return f"{self.line_name} - {self.msdn}"
-    
+
+    def activate_device(self):
+        """Customer activation after SAP dispatch. Only Shipped lines become Active."""
+        if self.status != 'SHIPPED':
+            return False
+        self.status = 'ACTIVE'
+        self.save(update_fields=['status'])
+        from .history import describe_line, record_event
+        record_event(
+            self.account,
+            'ACTIVATED',
+            f'{describe_line(self)} activated',
+            line=self,
+            reference=f'line:{self.id}:activated',
+            dedupe=True,
+        )
+        return True
+
     class Meta:
-        ordering = ['line_name']
+        ordering = ['-added_on', '-id']
 
 
 class LineService(models.Model):
@@ -251,3 +270,86 @@ class BillingLineItem(models.Model):
 
     class Meta:
         ordering = ['id']
+
+
+class SapSalesOrder(models.Model):
+    """Mock SAP sales order for a device associated with a phone line."""
+
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('IN_PACKING', 'In packing'),
+        ('IN_TRANSIT', 'In transit'),
+        ('DISPATCHED', 'Dispatched'),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='sap_orders')
+    line = models.ForeignKey(Line, on_delete=models.CASCADE, related_name='sap_orders')
+    sap_order_number = models.CharField(max_length=20, unique=True)
+    device_model = models.CharField(max_length=100)
+    ordered_on = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sap_order_number} ({self.line.msdn})"
+
+    class Meta:
+        ordering = ['-ordered_on']
+
+
+class SapDelivery(models.Model):
+    """Mock SAP outbound delivery / dispatch record."""
+
+    order = models.OneToOneField(SapSalesOrder, on_delete=models.CASCADE, related_name='delivery')
+    dispatched = models.BooleanField(default=False)
+    actual_dispatch_date = models.DateField(null=True, blank=True)
+    expected_dispatch_date = models.DateField(null=True, blank=True)
+    carrier = models.CharField(max_length=50, blank=True, default='')
+    tracking_number = models.CharField(max_length=50, blank=True, default='')
+    delay_reason = models.CharField(max_length=255, blank=True, default='')
+
+    def __str__(self):
+        return f"Delivery {self.order.sap_order_number}"
+
+
+class AccountEvent(models.Model):
+    """Timeline of account transactions for the History tab."""
+
+    EVENT_TYPE_CHOICES = [
+        ('LINE_ADDED', 'Line added'),
+        ('DISPATCHED', 'Dispatched'),
+        ('ACTIVATED', 'Activated'),
+        ('SUSPENDED', 'Suspended'),
+        ('RESTORED', 'Restored'),
+        ('REACTIVATED', 'Reactivated'),
+        ('SERVICE_ADDED', 'Service added'),
+        ('PAYMENT', 'Payment'),
+        ('STATEMENT', 'Statement'),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='events')
+    occurred_at = models.DateTimeField()
+    event_type = models.CharField(max_length=32, choices=EVENT_TYPE_CHOICES)
+    summary = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    line = models.ForeignKey(
+        Line, on_delete=models.SET_NULL, null=True, blank=True, related_name='events'
+    )
+    reference = models.CharField(max_length=255, blank=True, default='')
+
+    def __str__(self):
+        return f"{self.account.account_number} {self.event_type} {self.occurred_at}"
+
+    @property
+    def filter_group(self):
+        if self.event_type in ('PAYMENT', 'STATEMENT'):
+            return 'payments'
+        if self.event_type == 'SERVICE_ADDED':
+            return 'services'
+        return 'lines'
+
+    class Meta:
+        ordering = ['-occurred_at', '-id']
+        indexes = [
+            models.Index(fields=['account', '-occurred_at']),
+        ]

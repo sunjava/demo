@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP Warehouse - Dispatch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root { --sap-blue: #0070f2; }
+        body { background: #f4f6f8; color: #222; }
+        .sap-header {
+            background: #fff;
+            border-bottom: 3px solid var(--sap-blue);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .sap-title { font-size: 1.4rem; font-weight: 700; color: var(--sap-blue); margin: 0; }
+        .sap-subtitle { color: #666; font-size: 0.9rem; }
+        .page-title { font-size: 1.8rem; font-weight: 600; margin: 1.5rem 0 0.5rem; color: var(--sap-blue); }
+        .orders-table thead th {
+            color: #555;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid #eee;
+        }
+        .btn-dispatch { background: var(--sap-blue); color: #fff; border: none; font-weight: 600; }
+        .btn-dispatch:hover { background: #0057c2; color: #fff; }
+        .status-pill {
+            background: #fff4e5;
+            color: #b86b00;
+            border-radius: 2rem;
+            padding: 0.2rem 0.75rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .back-link { color: var(--sap-blue); text-decoration: none; font-weight: 500; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="sap-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <div class="sap-title">SAP Warehouse</div>
+                <div class="sap-subtitle">Outbound delivery — not the customer account</div>
+            </div>
+            <a href="/dashboard/" class="btn btn-outline-primary btn-sm">Back to portal</a>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <a href="/dashboard/" class="back-link"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        <h1 class="page-title">Pending shipment queue ({{ orders|length }})</h1>
+        <p class="text-muted">Dispatch here. The account chatbot cannot mark a device as shipped. After dispatch, the customer activates the line.</p>
+
+        {% if dispatched %}
+        <div class="alert alert-success">Dispatched SAP order {{ dispatched }}. The line is now Shipped.</div>
+        {% endif %}
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        {% if orders %}
+        <div class="table-responsive bg-white rounded shadow-sm">
+            <table class="table orders-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>SAP order</th>
+                        <th>Account</th>
+                        <th>Employee</th>
+                        <th>MSDN</th>
+                        <th>Device</th>
+                        <th>Expected</th>
+                        <th>Line status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><code>{{ order.sap_order_number }}</code></td>
+                        <td>
+                            <a href="/accounts/{{ order.account_id }}/">{{ order.account.account_number }}</a>
+                        </td>
+                        <td>{{ order.line.employee_name }}</td>
+                        <td>{{ order.line.msdn }}</td>
+                        <td>{{ order.device_model }}</td>
+                        <td>
+                            {% if order.delivery.expected_dispatch_date %}
+                                {{ order.delivery.expected_dispatch_date|date:"d M Y" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td><span class="status-pill">{{ order.line.get_status_display }}</span></td>
+                        <td>
+                            <form method="post" action="{% url 'sap_dispatch' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="sap_order_number" value="{{ order.sap_order_number }}">
+                                <button type="submit" class="btn btn-dispatch btn-sm">Dispatch</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-light border">No Shipment orders in the warehouse queue.</div>
+        {% endif %}
+    </div>
+</body>
+</html>

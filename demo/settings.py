@@ -169,6 +169,11 @@ LOGIN_URL = '/login/'
 # OpenAI Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
+# Mock SAP MCP server (dispatch / order status)
+SAP_MCP_URL = os.environ.get('SAP_MCP_URL', 'http://127.0.0.1:3100/mcp')
+SAP_MCP_HOST = os.environ.get('SAP_MCP_HOST', '127.0.0.1')
+SAP_MCP_PORT = int(os.environ.get('SAP_MCP_PORT', '3100'))
+
 # Production Settings for Railway
 if not DEBUG:
     # Security settings for production

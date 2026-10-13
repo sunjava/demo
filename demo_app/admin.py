@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Account, Line, Service, LineService, BillingStatement, BillingLineItem
+from .models import (
+    Account, Line, Service, LineService, BillingStatement, BillingLineItem,
+    SapSalesOrder, SapDelivery, AccountEvent,
+)
 
 
 @admin.register(Account)
@@ -55,3 +58,23 @@ class BillingLineItemAdmin(admin.ModelAdmin):
     list_display = ['statement', 'line', 'category', 'description', 'amount']
     list_filter = ['category']
     search_fields = ['description', 'statement__account__account_number']
+
+
+@admin.register(SapSalesOrder)
+class SapSalesOrderAdmin(admin.ModelAdmin):
+    list_display = ['sap_order_number', 'account', 'line', 'device_model', 'status', 'ordered_on']
+    list_filter = ['status', 'ordered_on']
+    search_fields = ['sap_order_number', 'line__msdn', 'line__employee_name', 'device_model']
+
+
+@admin.register(SapDelivery)
+class SapDeliveryAdmin(admin.ModelAdmin):
+    list_display = ['order', 'dispatched', 'actual_dispatch_date', 'expected_dispatch_date', 'carrier']
+    list_filter = ['dispatched']
+
+
+@admin.register(AccountEvent)
+class AccountEventAdmin(admin.ModelAdmin):
+    list_display = ['account', 'occurred_at', 'event_type', 'summary', 'line', 'amount']
+    list_filter = ['event_type', 'occurred_at']
+    search_fields = ['summary', 'reference', 'account__account_number']

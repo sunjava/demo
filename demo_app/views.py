@@ -15,6 +15,7 @@ from datetime import timedelta
 from .models import Account, Line, Service, LineService, BillingStatement
 from .chatbot import chatbot
 from .billing import pay_outstanding_statements
+from .history import backfill_account_history, build_account_reports, describe_line, record_event
 
 # Create your views here.
 
@@ -86,7 +87,7 @@ def all_lines(request):
     """Display all lines across all accounts grouped by account and sorted by created date"""
     # Get accounts with their lines, ordered by account last modified date (newest first)
     accounts_with_lines = Account.objects.prefetch_related(
-        'lines'
+        Prefetch('lines', queryset=Line.objects.order_by('-added_on', '-id'))
     ).order_by('-last_modified_on')
     
     # Get statistics
@@ -112,6 +113,12 @@ def all_lines(request):
     elif status_filter == 'CANCELLED':
         filtered_count = cancelled_lines
         page_title = f"All Cancelled Lines ({filtered_count})"
+    elif status_filter == 'PENDING_SHIPMENT':
+        filtered_count = Line.objects.filter(status='PENDING_SHIPMENT').count()
+        page_title = f"All Shipment Lines ({filtered_count})"
+    elif status_filter == 'SHIPPED':
+        filtered_count = Line.objects.filter(status='SHIPPED').count()
+        page_title = f"All Shipped Lines ({filtered_count})"
     else:
         filtered_count = total_lines
         page_title = f"All Lines by Account ({filtered_count})"
@@ -148,10 +155,13 @@ def account_details(request, account_id):
         ),
         id=account_id,
     )
-    lines = account.lines.all().order_by('line_name')
+    lines = account.lines.all().order_by('-added_on', '-id')
     billing_statements = list(account.billing_statements.all())
     for statement in billing_statements:
         statement.refresh_status()
+    backfill_account_history(account)
+    history_events = account.events.select_related('line').all()
+    reports = build_account_reports(account)
     
     # Track recently viewed accounts in session with timestamps
     recently_viewed_data = request.session.get('recently_viewed_accounts', {})
@@ -175,6 +185,8 @@ def account_details(request, account_id):
         'lines': lines,
         'account_id': account_id,
         'billing_statements': billing_statements,
+        'history_events': history_events,
+        'reports': reports,
     }
     return render(request, 'demo_app/account_details.html', context)
 
@@ -348,6 +360,16 @@ def add_service_to_lines(request):
                 payment_method=payment_method,
                 transaction_id=str(uuid.uuid4())[:8].upper()
             )
+            record_event(
+                line.account,
+                'SERVICE_ADDED',
+                f'{service.name} added to {describe_line(line)}',
+                line=line,
+                amount=total_amount,
+                reference=f'lineservice:{line_service.id}',
+                occurred_at=line_service.created_at,
+                dedupe=True,
+            )
             
             created_services.append({
                 'line_service_id': line_service.id,
@@ -412,7 +434,7 @@ def get_line_services(request, line_id):
 def get_account_lines(request, account_id):
     """Get all lines for an account with their current services"""
     account = get_object_or_404(Account, id=account_id)
-    lines = account.lines.all()
+    lines = account.lines.all().order_by('-added_on', '-id')
     
     lines_data = []
     for line in lines:
@@ -474,6 +496,13 @@ def suspend_lines(request):
             if line.status == 'ACTIVE':
                 line.status = 'SUSPENDED'
                 line.save()
+                record_event(
+                    line.account,
+                    'SUSPENDED',
+                    f'{describe_line(line)} suspended',
+                    line=line,
+                    reference=f'line:{line.id}:suspended:{timezone.now().isoformat()}',
+                )
                 suspended_lines.append({
                     'line_id': line.id,
                     'line_name': line.line_name,
@@ -516,6 +545,13 @@ def restore_lines(request):
             if line.status == 'SUSPENDED':
                 line.status = 'ACTIVE'
                 line.save()
+                record_event(
+                    line.account,
+                    'RESTORED',
+                    f'{describe_line(line)} restored',
+                    line=line,
+                    reference=f'line:{line.id}:restored:{timezone.now().isoformat()}',
+                )
                 restored_lines.append({
                     'line_id': line.id,
                     'line_name': line.line_name,
@@ -583,7 +619,7 @@ def create_line(request):
             msdn=msdn,
             employee_name=line_data.get('employeeName', 'Unknown Employee'),
             employee_number=employee_number,
-            status='ACTIVE',
+            status='PENDING_SHIPMENT',
             payment_due_date=payment_due_date,
             
             # Device information
@@ -605,6 +641,8 @@ def create_line(request):
             trade_in_value=trade_in_data.get('value', 0),
             total_monthly_cost=summary_data.get('totalMonthly', 0)
         )
+        from .sap import create_activation_order
+        create_activation_order(line)
         
         return JsonResponse({
             'success': True,
@@ -725,7 +763,7 @@ def create_mirrored_line(request):
             msdn=msdn,
             employee_name=new_employee_name,
             employee_number=employee_number,
-            status='ACTIVE',
+            status='PENDING_SHIPMENT',
             payment_due_date=payment_due_date,
             
             # Copy device information from mirrored line
@@ -747,6 +785,8 @@ def create_mirrored_line(request):
             trade_in_value=line_to_mirror.trade_in_value,
             total_monthly_cost=line_to_mirror.total_monthly_cost
         )
+        from .sap import create_activation_order
+        create_activation_order(line)
         
         return JsonResponse({
             'success': True,
@@ -769,6 +809,48 @@ def create_mirrored_line(request):
             }
         })
         
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
+
+
+        return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def activate_line(request):
+    """Customer-activate a shipped line. Pending shipment cannot be activated."""
+    try:
+        data = json.loads(request.body)
+        line_id = data.get('line_id')
+        if not line_id:
+            return JsonResponse({'error': 'line_id is required'}, status=400)
+        line = get_object_or_404(Line, id=line_id)
+        if line.status == 'ACTIVE':
+            return JsonResponse({
+                'success': True,
+                'message': 'Line is already active',
+                'line': {'id': line.id, 'status': line.status, 'status_display': line.get_status_display()},
+            })
+        if line.status != 'SHIPPED':
+            return JsonResponse({
+                'error': f'Line must be Shipped before activation (currently {line.get_status_display()}).',
+                'status': line.status,
+            }, status=400)
+        line.activate_device()
+        return JsonResponse({
+            'success': True,
+            'message': f'{line.line_name} is now Active',
+            'line': {
+                'id': line.id,
+                'line_name': line.line_name,
+                'status': line.status,
+                'status_display': line.get_status_display(),
+            },
+        })
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
@@ -1005,6 +1087,55 @@ def update_line_payment_date(request):
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
+def sap_warehouse(request):
+    """Warehouse/SAP fulfillment queue: Shipment orders only."""
+    from .sap import list_pending_dispatch_orders
+
+    orders = list_pending_dispatch_orders()
+    dispatched = request.GET.get('dispatched')
+    error = request.GET.get('error')
+    return render(request, 'demo_app/sap_warehouse.html', {
+        'orders': orders,
+        'dispatched': dispatched,
+        'error': error,
+    })
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def sap_dispatch(request):
+    """Mark one SAP sales order as dispatched (warehouse only)."""
+    from .sap import confirm_dispatch_order
+    from urllib.parse import quote
+
+    wants_json = 'application/json' in (request.content_type or '')
+    if wants_json:
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        sap_order_number = data.get('sap_order_number')
+        carrier = data.get('carrier') or 'UPS'
+    else:
+        sap_order_number = request.POST.get('sap_order_number')
+        carrier = request.POST.get('carrier') or 'UPS'
+
+    if not sap_order_number:
+        if wants_json:
+            return JsonResponse({'error': 'sap_order_number is required'}, status=400)
+        return redirect('/sap/warehouse/?error=' + quote('SAP order number is required'))
+
+    result = confirm_dispatch_order(sap_order_number, carrier=carrier)
+    if wants_json:
+        status = 200 if result.get('success') else 400
+        return JsonResponse(result, status=status)
+    if result.get('success'):
+        return redirect('/sap/warehouse/?dispatched=' + quote(str(sap_order_number)))
+    return redirect('/sap/warehouse/?error=' + quote(result.get('error') or 'Dispatch failed'))
 
 
 @login_required
