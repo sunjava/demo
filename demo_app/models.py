@@ -109,7 +109,7 @@ class Line(models.Model):
     """Line model representing individual phone lines"""
     
     STATUS_CHOICES = [
-        ('PENDING_SHIPMENT', 'Shipment'),
+        ('PENDING_SHIPMENT', 'Ordered'),
         ('SHIPPED', 'Shipped'),
         ('ACTIVE', 'Active'),
         ('SUSPENDED', 'Suspended'),

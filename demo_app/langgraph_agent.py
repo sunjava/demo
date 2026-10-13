@@ -40,8 +40,8 @@ Available services:
 
 Route questions:
 - Bill, amount due, due immediately, due date, taxes, statement, line items, "why was I charged", payment guidance → ask_billing_agent.
-- Device dispatched, order status, shipping, ETA, "when will it ship", "where is my device" → ask_sap_agent (read-only). Only Shipment lines have dispatch/ETA. If SAP returns a pending order, the device has not shipped yet. Never tell the customer it was already dispatched unless the specialist says it is Shipped or dispatched=true. You cannot mark a device as dispatched; warehouse staff do that in SAP. Do not mention Active lines.
-- Activate a shipped device/line → activate_shipped_lines (only after SAP dispatch; Shipment lines cannot be activated).
+- Device dispatched, order status, shipping, ETA, "when will it ship", "where is my device" → ask_sap_agent (read-only). Only Ordered lines have dispatch/ETA. If SAP returns a pending order, the device has not shipped yet. Never tell the customer it was already dispatched unless the specialist says it is Shipped or dispatched=true. You cannot mark a device as dispatched; warehouse staff do that in SAP. Do not mention Active lines.
+- Activate a shipped device/line → activate_shipped_lines (only after SAP dispatch; Ordered lines cannot be activated).
 - List/suspend/restore/reactivate lines, add/mirror/upgrade line, add a service → your existing line tools.
 - Pay the bill → pay_account (never let a specialist take payment).
 
@@ -196,7 +196,7 @@ def reactivate_cancelled_lines(line_identifiers: Optional[List[str]] = None) -> 
 
 @tool
 def activate_shipped_lines(line_identifiers: Optional[List[str]] = None) -> dict:
-    """Activate a shipped line after SAP dispatch. Shipment lines cannot be activated yet."""
+    """Activate a shipped line after SAP dispatch. Ordered lines cannot be activated yet."""
     identifiers = _as_list(line_identifiers)
     account = Account.objects.get(id=_account_id())
     if identifiers:

@@ -356,7 +356,6 @@
     <div class="tmobile-header">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <img src="{% static 'logo.svg' %}" alt="T-Mobile Logo" class="tmobile-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
                 <span class="tmobile-title">ABC Limited</span>
             </div>
             <div class="profile-section">
@@ -431,7 +430,7 @@
                                          <select class="form-control search-input" id="statusFilter">
                          <option value="">All Statuses</option>
                          <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active</option>
-                         <option value="PENDING_SHIPMENT" {% if status_filter == 'PENDING_SHIPMENT' %}selected{% endif %}>Shipment</option>
+                         <option value="PENDING_SHIPMENT" {% if status_filter == 'PENDING_SHIPMENT' %}selected{% endif %}>Ordered</option>
                          <option value="SHIPPED" {% if status_filter == 'SHIPPED' %}selected{% endif %}>Shipped</option>
                          <option value="SUSPENDED" {% if status_filter == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
                          <option value="CANCELLED" {% if status_filter == 'CANCELLED' %}selected{% endif %}>Cancelled</option>

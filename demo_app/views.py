@@ -115,7 +115,7 @@ def all_lines(request):
         page_title = f"All Cancelled Lines ({filtered_count})"
     elif status_filter == 'PENDING_SHIPMENT':
         filtered_count = Line.objects.filter(status='PENDING_SHIPMENT').count()
-        page_title = f"All Shipment Lines ({filtered_count})"
+        page_title = f"All Ordered Lines ({filtered_count})"
     elif status_filter == 'SHIPPED':
         filtered_count = Line.objects.filter(status='SHIPPED').count()
         page_title = f"All Shipped Lines ({filtered_count})"
@@ -1091,7 +1091,7 @@ def update_line_payment_date(request):
 
 @login_required
 def sap_warehouse(request):
-    """Warehouse/SAP fulfillment queue: Shipment orders only."""
+    """Warehouse/SAP fulfillment queue: Ordered lines only."""
     from .sap import list_pending_dispatch_orders
 
     orders = list_pending_dispatch_orders()

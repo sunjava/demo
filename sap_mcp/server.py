@@ -46,7 +46,7 @@ _find_expected_orders = sync_to_async(_find_expected, thread_sensitive=True)
 def _unavailable(account_number: str, query: str) -> dict:
     return {
         'success': False,
-        'error': 'No matching Shipment SAP order. The device is not marked dispatched; retry with an empty query if no person/MSDN was specified.',
+        'error': 'No matching Ordered SAP order. The device is not marked dispatched; retry with an empty query if no person/MSDN was specified.',
         'account_number': account_number,
         'query': query,
         'orders': [],
@@ -67,7 +67,7 @@ def create_mcp():
 
     @mcp.tool()
     async def sap_get_order(account_number: str, query: str = '') -> dict:
-        """Look up open SAP sales orders (Shipment or Shipped only). Query may be employee name, MSDN, line name, device, or order number. Active lines are omitted."""
+        """Look up open SAP sales orders (Ordered or Shipped only). Query may be employee name, MSDN, line name, device, or order number. Active lines are omitted."""
         orders = await _find_orders(account_number, query)
         if not orders:
             return _unavailable(account_number, query)
@@ -75,7 +75,7 @@ def create_mcp():
 
     @mcp.tool()
     async def sap_get_dispatch_status(account_number: str, query: str = '') -> dict:
-        """Return dispatch status for Shipment and Shipped lines only. Ignore Active lines."""
+        """Return dispatch status for Ordered and Shipped lines only. Ignore Active lines."""
         orders = await _find_orders(account_number, query)
         if not orders:
             return _unavailable(account_number, query)
@@ -97,7 +97,7 @@ def create_mcp():
 
     @mcp.tool()
     async def sap_get_expected_dispatch(account_number: str, query: str = '') -> dict:
-        """Return expected dispatch date / ETA for Shipment lines only. Active lines have no dispatch expectation."""
+        """Return expected dispatch date / ETA for Ordered lines only. Active lines have no dispatch expectation."""
         orders = await _find_expected_orders(account_number, query)
         if not orders:
             return _unavailable(account_number, query)
@@ -118,7 +118,7 @@ def create_mcp():
 
     @mcp.tool()
     async def sap_confirm_dispatch(account_number: str, query: str = '', carrier: str = 'UPS') -> dict:
-        """Mark the SAP outbound delivery as dispatched. Matching Shipment lines become Shipped; they stay inactive until the customer activates."""
+        """Mark the SAP outbound delivery as dispatched. Matching Ordered lines become Shipped; they stay inactive until the customer activates."""
         result = await _confirm_dispatch(account_number, query, carrier)
         if not result.get('success'):
             return _unavailable(account_number, query)

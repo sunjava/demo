@@ -131,8 +131,8 @@ class ActivationLifecycleTests(TestCase):
         self.assertNotEqual(pending_pos, -1)
         self.assertNotEqual(old_pos, -1)
         self.assertLess(pending_pos, old_pos)
-        self.assertIn('Shipment', html)
-        self.assertEqual(lines[0].get_status_display(), 'Shipment')
+        self.assertIn('Ordered', html)
+        self.assertEqual(lines[0].get_status_display(), 'Ordered')
 
         new_line = lines[0]
         self.assertFalse(new_line.activate_device())

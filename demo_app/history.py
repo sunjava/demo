@@ -18,7 +18,7 @@ CATEGORY_LABELS = {
 
 SNAPSHOT_STATUSES = [
     ('ACTIVE', 'Active'),
-    ('PENDING_SHIPMENT', 'Shipment'),
+    ('PENDING_SHIPMENT', 'Ordered'),
     ('SHIPPED', 'Shipped'),
     ('SUSPENDED', 'Suspended'),
 ]

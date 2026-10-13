@@ -191,7 +191,7 @@ def confirm_dispatch_order(sap_order_number: str, carrier: str = 'UPS') -> dict:
         return {
             'success': False,
             'error': (
-                f'Only Shipment orders can be dispatched '
+                f'Only Ordered lines can be dispatched '
                 f'(currently {order.line.get_status_display()}).'
             ),
         }

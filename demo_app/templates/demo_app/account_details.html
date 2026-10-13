@@ -929,7 +929,6 @@
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
                 <a href="/dashboard/" class="d-flex align-items-center text-decoration-none">
-                    <img src="{% static 'logo.svg' %}" alt="T-Mobile Logo" class="tmobile-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
                     <span class="tmobile-title">ABC Limited</span>
                 </a>
             </div>
@@ -1119,7 +1118,7 @@
                                     <div class="search-filters">
                                         <button class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="all">All</button>
                                         <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="active">Active</button>
-                                        <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="shipment">Shipment</button>
+                                        <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="ordered">Ordered</button>
                                         <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="shipped">Shipped</button>
                                         <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="suspended">Suspended</button>
                                     </div>
@@ -3276,7 +3275,7 @@
             // Show success message
             showComingSoonModal(
               'Line Mirrored Successfully!', 
-              `Your new line "${data.line.line_name}" for ${data.line.employee_name} has been created with the same settings as ${data.line.mirrored_from.line_name}. Status is Shipment until SAP dispatch and activation.`
+              `Your new line "${data.line.line_name}" for ${data.line.employee_name} has been created with the same settings as ${data.line.mirrored_from.line_name}. Status is Ordered until SAP dispatch and activation.`
             );
             
             // Refresh the page to show the new line
@@ -5587,7 +5586,7 @@
                     setTimeout(() => {
                         showComingSoonModal(
                             'Line Created Successfully!', 
-                            `Your new line has been created successfully!\n\nLine Details:\n• Phone Number: ${data.line.msdn}\n• Employee: ${data.line.employee_name}\n• Device: ${data.line.device_details}\n• Plan: ${data.line.plan_name}\n\nStatus is Shipment. It will show as Shipped after SAP dispatch, then Active after you activate the device.`
+                            `Your new line has been created successfully!\n\nLine Details:\n• Phone Number: ${data.line.msdn}\n• Employee: ${data.line.employee_name}\n• Device: ${data.line.device_details}\n• Plan: ${data.line.plan_name}\n\nStatus is Ordered. It will show as Shipped after SAP dispatch, then Active after you activate the device.`
                         );
                         
                         // Navigate back to account summary to show the new line
