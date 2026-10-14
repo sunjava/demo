@@ -593,19 +593,15 @@
                     const accountId = this.dataset.accountId;
                     const accountNumber = this.dataset.accountNumber;
                     
-                    // Check if line is active (eligible for upgrade)
                     const lineRow = this.closest('tr');
-                    const statusBadge = lineRow.querySelector('.badge');
-                    const lineStatus = statusBadge.textContent.trim();
+                    const lineStatus = (lineRow.dataset.lineStatus || '').toUpperCase();
                     
                     if (lineStatus !== 'ACTIVE') {
                         alert(`Line "${lineName}" cannot be upgraded. Only active lines are eligible for upgrades.`);
                         return;
                     }
                     
-                    // Navigate to upgrade flow (you can customize this URL)
-                    const upgradeUrl = `/accounts/${accountId}/lines/${lineId}/upgrade/`;
-                    window.location.href = upgradeUrl;
+                    window.location.href = `/accounts/${accountId}/?upgrade=${lineId}`;
                 });
             });
             
@@ -618,19 +614,15 @@
                     const accountId = this.dataset.accountId;
                     const accountNumber = this.dataset.accountNumber;
                     
-                    // Check if line is active (eligible for services)
                     const lineRow = this.closest('tr');
-                    const statusBadge = lineRow.querySelector('.badge');
-                    const lineStatus = statusBadge.textContent.trim();
+                    const lineStatus = (lineRow.dataset.lineStatus || '').toUpperCase();
                     
                     if (lineStatus !== 'ACTIVE') {
                         alert(`Line "${lineName}" cannot have services added. Only active lines are eligible for new services.`);
                         return;
                     }
                     
-                    // Navigate to add service flow (you can customize this URL)
-                    const addServiceUrl = `/accounts/${accountId}/lines/${lineId}/add-service/`;
-                    window.location.href = addServiceUrl;
+                    window.location.href = `/accounts/${accountId}/?add_service=${lineId}`;
                 });
             });
             const accountGroups = document.querySelectorAll('.account-group-container');

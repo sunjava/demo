@@ -3414,6 +3414,18 @@
         
         console.log('Add Service modal state reset completed');
       }
+
+      (function openAddServiceFromQuery() {
+        const addServiceLineId = new URLSearchParams(window.location.search).get('add_service');
+        if (!addServiceLineId) return;
+        const checkbox = document.querySelector(`.line-checkbox[data-line-id="${addServiceLineId}"]`);
+        if (checkbox) checkbox.checked = true;
+        const modalElement = document.getElementById('addServiceModal');
+        if (modalElement) {
+          new bootstrap.Modal(modalElement).show();
+          resetAddServiceModal();
+        }
+      })();
       
       // Add Bootstrap modal event listeners to ensure reset happens every time
       document.addEventListener('DOMContentLoaded', function() {
@@ -4596,6 +4608,20 @@
             }, 100);
           }
         }
+
+        (function openUpgradeFromQuery() {
+          const params = new URLSearchParams(window.location.search);
+          const upgradeLineId = params.get('upgrade');
+          if (!upgradeLineId) return;
+          const checkbox = document.querySelector(`.line-checkbox[data-line-id="${upgradeLineId}"]`);
+          if (checkbox) {
+            checkbox.checked = true;
+            if (typeof updateButtonStates === 'function') {
+              updateButtonStates();
+            }
+          }
+          openUpgradeModal();
+        })();
 
         // Function to reset upgrade modal form
         function resetUpgradeModalForm() {
